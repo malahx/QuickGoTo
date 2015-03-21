@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0FDC1965-81EB-42C5-9123-BDFFF6D54D53}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>QuickGoTo</RootNamespace>
+    <AssemblyName>QuickGoTo</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <ReleaseVersion>0.10</ReleaseVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="AfterBuild" command="./install.sh" />
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\lib\0.90\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\lib\0.90\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QG_Toolbar.cs" />
+    <Compile Include="QG_GoTo.cs" />
+    <Compile Include="QG_GUI.cs" />
+    <Compile Include="QG.cs" />
+    <Compile Include="QG_Settings.cs" />
+    <Compile Include="QG_Quick.cs" />
+    <Compile Include="ToolbarWrapper.cs" />
+    <Compile Include="QG_Data.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <None Include="COPYING" />
+    <None Include="QuickGoTo.version" />
+    <None Include="README.md" />
+    <None Include="GameData\QuickGoTo\COPYING" />
+    <None Include="GameData\QuickGoTo\QuickGoTo.version" />
+    <None Include="GameData\QuickGoTo\README.md" />
+    <None Include="GameData\QuickGoTo\Plugins\QuickGoTo.dll" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyAdmi.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyAstr.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyLves.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyMI.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyMain.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyRc.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyRnD.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyRv.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyRvED.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyRvSC.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzySC.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzySPH.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzySett.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyTS.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyToolBar.png" />
+    <None Include="GameData\QuickGoTo\Textures\BlizzyVAB.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockAdmi.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockAstr.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockLves.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockMI.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockMain.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockRc.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockRnD.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockRv.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockRvED.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockRvSC.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockSC.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockSPH.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockSett.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockTS.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockToolBar.png" />
+    <None Include="GameData\QuickGoTo\Textures\StockVAB.png" />
+    <None Include="BlizzyToolBar.xcf" />
+    <None Include="StockToolBar.xcf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GameData\" />
+  </ItemGroup>
+</Project>
