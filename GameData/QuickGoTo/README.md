@@ -31,7 +31,7 @@ You can use the stocktoolbar or the blizzy toolbar mod to go to the:
 - TS: Tracking Station,
 - MI: Mission Control,
 - Admi: Administration,
-- RnD: Research and Develpment,
+- RnD: Research and Development,
 - Astr: Astronaut Complex,
 - Lves: Last Vessel,
 - Rc: Recover,
@@ -66,5 +66,6 @@ v0.10 - 2015.03.21
 
 * http://forum.kerbalspaceprogram.com/threads/95168
 * https://github.com/malahx/QuickGoTo
+* Toolbar: http://forum.kerbalspaceprogram.com/threads/60863
 * SceneJumper: http://forum.kerbalspaceprogram.com/threads/66116
 * Faenza icon theme: http://gnome-look.org/content/show.php/Faenza?content=128143
