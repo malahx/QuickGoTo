@@ -1,5 +1,5 @@
 ﻿#### QuickGoTo
-#### A plugin for Kerbal Space Program 0.90.0
+#### A plugin for Kerbal Space Program 1.0.0
 #### Copyright 2015 Malah
 
 This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #### What is it?
 
-QuickGoTo is a small plugin which add the possibility to go to an other scene (VAB, SPH, Tracking Station ...).
+QuickGoTo is a small plugin which add the possibility to go to an other scene from anywhere (VAB, SPH, Tracking Station ...).
 
 #### How does it work?
 
@@ -43,11 +43,24 @@ You can use the stocktoolbar or the blizzy toolbar mod to go to the:
 
 Unzip all files. Put the QuickGoTo folder in your KSP/GameData folder.
 
+#### How to update it?
+
+Unzip all files. Merge the new QuickGoTo folder with the old folder which is in your KSP/GameData folder.
+
 #### How to uninstall it?
 
 Delete the QuickGoTo folder in your KSP/GameData folder.
 
 #### Changelog
+
+v1.00 - 2015.04.30
+* New: Added a button to access to the configuration,
+* Fix: Converted textures to DDS,
+* Fix: Corrected the Stock Toolbar icon not being created,
+* Fix: Enhanced the toolbars functions,
+* Fix: Corrected an error on the save of the LastVessel,
+* Fix: Corrected some minor bug,
+* Updated to KSP 1.00
 
 v0.10 - 2015.03.21
 * Initial pre release
@@ -64,7 +77,8 @@ v0.10 - 2015.03.21
 
 #### Links
 
-* http://forum.kerbalspaceprogram.com/threads/95168
+* http://forum.kerbalspaceprogram.com/threads/95168#QuickGoTo
+* https://kerbalstuff.com/mod/653/QuickGoTo
 * https://github.com/malahx/QuickGoTo
 * Toolbar: http://forum.kerbalspaceprogram.com/threads/60863
 * SceneJumper: http://forum.kerbalspaceprogram.com/threads/66116

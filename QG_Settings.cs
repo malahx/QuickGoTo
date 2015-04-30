@@ -37,19 +37,26 @@ namespace QuickGoTo {
 		[Persistent] public bool EnableGoToSPH = true;
 		[Persistent] public bool EnableGoToLastVessel = true;
 		[Persistent] public bool EnableGoToRecover = true;
-		//[Persistent] public bool EnableGoToRecoverToVAB = true;
-		//[Persistent] public bool EnableGoToRecoverToSPH = true;
 		[Persistent] public bool EnableGoToRevert = true;
 		[Persistent] public bool EnableGoToRevertToEditor = true;
 		[Persistent] public bool EnableGoToRevertToSpaceCenter = true;
 		[Persistent] public bool EnableGoToMainMenu = false;
 		[Persistent] public bool EnableGoToSettings = false;
+		[Persistent] public bool EnableSettings = false;
 
 		[Persistent] public bool StockToolBar = true;
 		[Persistent] public bool BlizzyToolBar = true;
+		[Persistent] public bool StockToolBar_ModApp = true;
 
 		[Persistent] public string CurrentGUISkin = HighLogic.Skin.name;
 		[Persistent] public bool ImageOnly = true;
+
+		[Persistent] public bool EnableQuickExit = false;
+		[Persistent] public bool EnableQuickScroll = false;
+		[Persistent] public bool EnableQuickRevert = false;
+		[Persistent] public bool EnableQuickHide = false;
+		[Persistent] public bool EnableQuickMute = false;
+		[Persistent] public bool EnableQuickIVA = false;
 
 		public void Save() {
 			ConfigNode _temp = ConfigNode.CreateConfigFromObject(this, new ConfigNode());

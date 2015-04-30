@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,13 +36,12 @@ namespace QuickGoTo {
 			SPH,
 			LastVessel,
 			Recover,
-			/*RecoverToVAB,
-			RecoverToSPH,*/
 			Revert,
 			RevertToEditor,
 			RevertToSpaceCenter,
 			MainMenu,
-			Settings
+			Settings,
+			Configurations
 		}	
 
 		internal static string GetText(GoTo goTo, bool force = false) {
@@ -66,10 +66,6 @@ namespace QuickGoTo {
 				return string.Format ("Go to the {0}", (QGoTo.LastVesselLastIndex != null && !force ? QGoTo.LastVesselLastIndex.protoVessel.vesselName : "last Vessel"));
 			case GoTo.Recover:
 				return "Recover";
-			/*case GoTo.RecoverToVAB:
-				return "Recover to the VAB";
-			case GoTo.RecoverToSPH:
-				return "Recover to the SPH";*/
 			case GoTo.Revert:
 				return "Revert to Launch";
 			case GoTo.RevertToEditor:
@@ -80,6 +76,8 @@ namespace QuickGoTo {
 				return "Go to The Main Menu";
 			case GoTo.Settings:
 				return "Go to the Settings";
+			case GoTo.Configurations:
+				return "QuickGoTo: Settings";
 			}
 			return string.Empty;
 		}
@@ -152,18 +150,6 @@ namespace QuickGoTo {
 			}
 		}
 
-		/*public static bool CanRecoverpVessel(ProtoVessel pvessel) {
-			if (HighLogic.LoadedSceneIsEditor) {
-				if (pvessel != null) {
-					if (pvessel.landed || pvessel.splashed) {
-						Quick.Warning ("pvessel is landed or splashed");
-						return true;
-					}
-				}
-			}
-			return false;
-		}*/
-
 		public static bool CanRevert {
 			get {
 				if (HighLogic.LoadedSceneIsFlight) {
@@ -178,7 +164,18 @@ namespace QuickGoTo {
 		public static bool CanRevertToEditor {
 			get {
 				if (HighLogic.LoadedSceneIsFlight) {
-					if (FlightGlobals.ready && HighLogic.CurrentGame.Parameters.Flight.CanRestart && FlightDriver.CanRevertToPrelaunch && FlightDriver.PreLaunchState != null && ShipConstruction.ShipType != EditorFacility.None) {
+					if (FlightGlobals.ready && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToEditor && FlightDriver.CanRevertToPrelaunch && FlightDriver.PreLaunchState != null && ShipConstruction.ShipType != EditorFacility.None) {
+						return true;
+					}
+				}
+				return false;
+			}
+		}
+
+		public static bool CanRevertToSpaceCenter {
+			get {
+				if (HighLogic.LoadedSceneIsFlight) {
+					if (FlightGlobals.ready && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToSpaceCenter && FlightDriver.CanRevertToPrelaunch && FlightDriver.PreLaunchState != null && ShipConstruction.ShipType != EditorFacility.None) {
 						return true;
 					}
 				}
@@ -257,21 +254,14 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool isAstronautComplex() {
-			CMAstronautComplex _CMAstronautComplex;
-			return isAstronautComplex(out _CMAstronautComplex);
-		}
-
-		public static bool isAstronautComplex(out CMAstronautComplex CMAstronautComplex) {
-			CMAstronautComplex = (CMAstronautComplex)CMAstronautComplex.FindObjectOfType (typeof(CMAstronautComplex));
-			return CMAstronautComplex != null;
+		public static bool isAstronautComplex {
+			get;
+			internal set;
 		}
 
 		public static bool isRnD {
-			get {
-				RDSceneSpawner _RDSceneSpawner = (RDSceneSpawner)RDSceneSpawner.FindObjectOfType (typeof(RDSceneSpawner));
-				return _RDSceneSpawner != null;
-			}
+			get;
+			internal set;
 		}
 
 		public static bool pVesselExists(ProtoVessel pvessel) {
@@ -286,6 +276,46 @@ namespace QuickGoTo {
 				return LastVessels [LastVessels.Count - 1];
 			}
 		}
+		internal static IEnumerator PostInit() {
+			while (ApplicationLauncher.Instance == null) {
+				yield return 0;
+			}
+			if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) { 
+				while (Funding.Instance == null) {
+					yield return 0;
+				}
+				while (Reputation.Instance == null) {
+					yield return 0;
+				}
+				while (Contracts.ContractSystem.Instance == null) {
+					yield return 0;
+				}
+				while (Contracts.Agents.AgentList.Instance == null) {
+					yield return 0;
+				}
+				while (FinePrint.ContractDefs.Instance == null) {
+					yield return 0;
+				}
+				while (Strategies.StrategySystem.Instance == null) {
+					yield return 0;
+				}
+				while (ScenarioUpgradeableFacilities.Instance == null) {
+					yield return 0;
+				}
+				while (ContractsApp.Instance == null) {
+					yield return 0;
+				}
+				while (CurrencyWidget.FindObjectOfType (typeof(CurrencyWidget)) == null) {
+					yield return 0;
+				}
+			}
+			if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER || HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX) {
+				while (ResearchAndDevelopment.Instance == null) {
+					yield return 0;
+				}
+			}
+			QGoTo.PostInitSC ();
+		}
 
 		internal static void PostInitSC() {
 			if (LastVessels.Count == 0) {
@@ -295,9 +325,11 @@ namespace QuickGoTo {
 				}
 			} else {
 				List<QData> _lastVessels = LastVessels;
+				LastVessels = new List<QData> ();
 				foreach (QData _lastVessel in _lastVessels) {
-					if (!pVesselExists (_lastVessel.protoVessel)) {
-						LastVessels.Remove (_lastVessel);
+					if (pVesselExists (_lastVessel.protoVessel)) {
+						LastVessels.Add (_lastVessel);
+					} else {
 						Quick.Warning ("Remove from the last Vessels: " + _lastVessel.protoVessel.vesselName);
 					}
 				}
@@ -329,41 +361,17 @@ namespace QuickGoTo {
 				}
 			}
 			if (pVessel.vesselType == VesselType.Unknown || pVessel.vesselType == VesselType.SpaceObject || pVessel.vesselType == VesselType.Debris) {
-				Quick.Warning (string.Format ("Can't save the last Vessel: ({0}) {1}", pVessel.vesselType.ToString (), pVessel.vesselName));
+				//Quick.Warning (string.Format ("Can't save the last Vessel: ({0}) {1}", pVessel.vesselType.ToString (), pVessel.vesselName));
 				return;
 			}
 			LastVessels.Add (new QData (pVessel));
-			Quick.Warning ("Saved the last Vessel: " + pVessel.vesselName);
+			Quick.Warning (string.Format("Saved the last Vessel: ({0}){1}", LastVessels.Count, pVessel.vesselName));
 			if (LastVessels.Count > 10) {
 				Quick.Warning ("Delete the first vessel from last Vessel: " + LastVessels[0].protoVessel.vesselName);
 				LastVessels.RemoveAt (0);
 			}
-			Quick.Warning ("Last Vessel has keep " + LastVessels.Count + " vessels");
+			//Quick.Warning ("Last Vessel has keep " + LastVessels.Count + " vessels");
 		}
-
-		/* internal static void PostInitED() {
-			Quick.Warning ("PostInitED");
-			if (SavedGoTo != GoTo.None) {
-				Quick.Warning ("GoTo OK");
-				switch (SavedGoTo) {
-				case GoTo.RecoverToSPH:
-				case GoTo.RecoverToVAB:
-					Quick.Warning ("Switch OK");
-					if (CanRecoverpVessel (LastVessel)) {
-						Quick.Warning ("LastVessel isrecoverable");
-						MissionRecoveryDialog _data = MissionRecoveryDialog.CreateFullDialog(LastVessel);
-						//GameEvents.onGUIRecoveryDialogSpawn.Fire();
-						//GameEvents.OnVesselRecoveryRequested.Fire (LastVessel);
-						//GameEvents.onVesselRecovered.Fire (LastVessel);
-						//ShipConstruction.RecoverVesselFromFlight (LastVessel, HighLogic.CurrentGame.flightState);
-						Quick.Log ("LastVessel recovered: " + LastVessel.vesselName);
-						LastVessel = null;
-					}
-					break;
-				}
-				SavedGoTo = GoTo.None;
-			}
-		}*/
 
 		public static void mainMenu() {
 			SavedGoTo = GoTo.None;
@@ -429,22 +437,27 @@ namespace QuickGoTo {
 		internal static void ClearSpaceCenter() {
 			if (RUIPrefabLauncher.Instance != null) {
 				GameEvents.onGUILaunchScreenDespawn.Fire ();
+				Quick.Log ("Clear LaunchScreen");
 			}
 			if (isMissionControl) {
 				GameEvents.onGUIMissionControlDespawn.Fire ();
+				Quick.Log ("Clear MissionControl");
 			}
 			if (isAdministration) {
 				GameEvents.onGUIAdministrationFacilityDespawn.Fire ();
+				Quick.Log ("Clear Administration");
 			}
-			CMAstronautComplex _CMAstronautComplex;
-			if (isAstronautComplex(out _CMAstronautComplex)) {
+			if (isAstronautComplex) {
+				CMAstronautComplex _CMAstronautComplex = (CMAstronautComplex)CMAstronautComplex.FindObjectOfType (typeof(CMAstronautComplex));
 				POINTER_INFO _ptr = new POINTER_INFO ();
 				_ptr.evt = POINTER_INFO.INPUT_EVENT.TAP;
 				_CMAstronautComplex.ButtonExit (ref _ptr);
 				GameEvents.onGUIAstronautComplexDespawn.Fire ();
+				Quick.Log ("Clear AstronautComplex");
 			}
 			if (isRnD) {
 				GameEvents.onGUIRnDComplexDespawn.Fire ();
+				Quick.Log ("Clear Research And Development");
 			}
 			InputLockManager.ClearControlLocks ();
 			Quick.Log ("Clear SpaceCenter");
@@ -592,30 +605,6 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Recover), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		/*public static void RecoverToVAB() {
-			SavedGoTo = GoTo.None;
-			if (CanRecover) {
-				SavedGoTo = GoTo.RecoverToVAB;
-				gotoVAB ();
-				Quick.Log (GetText (GoTo.RecoverToVAB));
-				return;
-			}
-			Quick.Warning ("You can't " + GetText(GoTo.Recover));
-			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Recover), 10, ScreenMessageStyle.UPPER_RIGHT);
-		}
-
-		public static void RecoverToSPH() {
-			SavedGoTo = GoTo.None;
-			if (CanRecover) {
-				SavedGoTo = GoTo.RecoverToSPH;
-				gotoSPH ();
-				Quick.Log (GetText (GoTo.RecoverToSPH));
-				return;
-			}
-			Quick.Warning ("You can't " + GetText(GoTo.Recover));
-			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Recover), 10, ScreenMessageStyle.UPPER_RIGHT);
-		}*/
-
 		public static void Revert() {
 			SavedGoTo = GoTo.None;
 			if (CanRevert) {
@@ -642,7 +631,7 @@ namespace QuickGoTo {
 
 		public static void RevertToSpaceCenter() {
 			SavedGoTo = GoTo.None;
-			if (CanRevertToEditor) {
+			if (CanRevertToSpaceCenter) {
 				gotoSpaceCenter (FlightDriver.PreLaunchState);
 				Quick.Log (GetText (GoTo.RevertToSpaceCenter));
 				return;

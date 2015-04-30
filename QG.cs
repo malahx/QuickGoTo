@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,95 +25,76 @@ namespace QuickGoTo {
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class QuickGoTo : Quick {
 
+		internal static QuickGoTo Instance;
+		internal static QBlizzyToolbar BlizzyToolbar;
+		internal static QStockToolbar StockToolbar;
+
 		private void Awake() {
-			if (HighLogic.LoadedSceneIsGame) {
-				QToolbar.Awake ();
-				QGUI.Awake ();
-			}
+			BlizzyToolbar = new QBlizzyToolbar ();
+			StockToolbar = new QStockToolbar ();
+			GameEvents.onGUIApplicationLauncherDestroyed.Add (StockToolbar.AppLauncherDestroyed);
 			GameEvents.onGameSceneLoadRequested.Add (OnGameSceneLoadRequested);
-			//GameEvents.onGUIEditorToolbarReady.Add (OnGUIEditorToolbarReady);
+			GameEvents.onGUIAstronautComplexSpawn.Add (AstronautComplexSpawn);
+			GameEvents.onGUIAstronautComplexDespawn.Add (AstronautComplexDespawn);
+			GameEvents.onGUIRnDComplexSpawn.Add (RnDComplexSpawn);
+			GameEvents.onGUIRnDComplexDespawn.Add (RnDComplexDespawn);
+			QGUI.Awake ();
 		}
 
 		private void Start() {
+			QSettings.Instance.Load ();
 			if (HighLogic.LoadedSceneIsGame) {
-				QSettings.Instance.Load ();
-				QToolbar.Instance.Start ();
-				if (HighLogic.LoadedScene == GameScenes.SPACECENTER) {
-					StartCoroutine (this.PostInitSC ());
-				}
-				if (HighLogic.LoadedScene == GameScenes.MAINMENU) {
-					QGoTo.LastVessels = new List<QData>();
-				}
+				BlizzyToolbar.Start ();
+				StartCoroutine (StockToolbar.AppLauncherReady ());
 			}
+			if (HighLogic.LoadedScene == GameScenes.SPACECENTER) {
+				StartCoroutine (QGoTo.PostInit ());
+			}
+			if (HighLogic.LoadedScene == GameScenes.MAINMENU) {
+				QGoTo.LastVessels = new List<QData>();
+			}
+			StartEach ();
 		}
 
-		internal void OnGameSceneLoadRequested(GameScenes gameScenes) {
+		private void OnGameSceneLoadRequested(GameScenes gameScenes) {
 			if (HighLogic.LoadedSceneIsFlight) {
 				Vessel _vessel = FlightGlobals.ActiveVessel;
 				if (_vessel != null) {
 					QGoTo.AddLastVessel(_vessel.protoVessel);
 				}
 			}
+			StockToolbar.AppLauncherDestroyed ();
 		}
-
-		private IEnumerator PostInitSC () {
-			while (ApplicationLauncher.Instance == null) {
-				yield return 0;
-			}
-			if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) { 
-				while (Funding.Instance == null) {
-					yield return 0;
-				}
-				while (Reputation.Instance == null) {
-					yield return 0;
-				}
-				while (Contracts.ContractSystem.Instance == null) {
-					yield return 0;
-				}
-				while (Contracts.Agents.AgentList.Instance == null) {
-					yield return 0;
-				}
-				while (FinePrint.ContractDefs.Instance == null) {
-					yield return 0;
-				}
-				while (Strategies.StrategySystem.Instance == null) {
-					yield return 0;
-				}
-				while (ScenarioUpgradeableFacilities.Instance == null) {
-					yield return 0;
-				}
-				while (ContractsApp.Instance == null) {
-					yield return 0;
-				}
-				while (CurrencyWidget.FindObjectOfType (typeof(CurrencyWidget)) == null) {
-					yield return 0;
-				}
-			}
-			if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER || HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX) {
-				while (ResearchAndDevelopment.Instance == null) {
-					yield return 0;
-				}
-			}
-			QGoTo.PostInitSC ();
+			
+		private void AstronautComplexSpawn() {
+			QGoTo.isAstronautComplex = true;
 		}
-
-		/*internal void OnGUIEditorToolbarReady() {
-			QGoTo.PostInitED ();
-		}*/
+		private void AstronautComplexDespawn() {
+			QGoTo.isAstronautComplex = false;
+		}
+		private void RnDComplexSpawn() {
+			QGoTo.isRnD = true;
+		}
+		private void RnDComplexDespawn() {
+			QGoTo.isRnD = false;
+		}
 
 		private void OnDestroy() {
-			if (QToolbar.Instance != null) {
-				QToolbar.Instance.OnDestroy ();
-			}
+			StopEach ();
+			BlizzyToolbar.OnDestroy ();
+			GameEvents.onGUIApplicationLauncherDestroyed.Remove (StockToolbar.AppLauncherDestroyed);
 			GameEvents.onGameSceneLoadRequested.Remove (OnGameSceneLoadRequested);
-			//GameEvents.onGUIEditorToolbarReady.Remove (OnGUIEditorToolbarReady);
+			GameEvents.onGUIAstronautComplexSpawn.Remove (AstronautComplexSpawn);
+			GameEvents.onGUIAstronautComplexDespawn.Remove (AstronautComplexDespawn);
+			GameEvents.onGUIRnDComplexSpawn.Remove (RnDComplexSpawn);
+			GameEvents.onGUIRnDComplexDespawn.Remove (RnDComplexDespawn);
 		}
-
+			
 		private void OnGUI() {
-			if (HighLogic.LoadedSceneIsGame) {
-				GUI.skin = AssetBase.GetGUISkin (QSettings.Instance.CurrentGUISkin);
-				QGUI.OnGUI ();
+			if (!HighLogic.LoadedSceneIsGame) {
+				return;
 			}
+			QGUI.OnGUI ();
 		}
 	}
 }
