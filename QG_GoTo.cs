@@ -63,7 +63,8 @@ namespace QuickGoTo {
 			case GoTo.SPH:
 				return "Go to the Space Plane Hangar";
 			case GoTo.LastVessel:
-				return string.Format ("Go to the {0}", (QGoTo.LastVesselLastIndex != null && !force ? QGoTo.LastVesselLastIndex.protoVessel.vesselName : "last Vessel"));
+				QData _lastVessel = QGoTo.LastVesselLastIndex ();
+				return string.Format ("Go to the {0}", (_lastVessel != null && !force ? "vessel: " + _lastVessel.protoVessel.vesselName : "last Vessel"));
 			case GoTo.Recover:
 				return "Recover";
 			case GoTo.Revert:
@@ -93,9 +94,7 @@ namespace QuickGoTo {
 					return true;
 				}
 				if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToMainMenu) {
-					if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR) {
-						return true;
-					}
+					return FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR;
 				}
 				return false;
 			}
@@ -109,9 +108,7 @@ namespace QuickGoTo {
 							return true;
 						}
 						if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToTrackingStation) {
-							if (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) {
-								return true;
-							}
+							return FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR;
 						}
 					}
 				}
@@ -127,9 +124,7 @@ namespace QuickGoTo {
 							return true;
 						}
 						if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToSpaceCenter) {
-							if (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) {
-								return true;
-							}
+							return FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR;
 						}
 					}
 				}
@@ -197,9 +192,7 @@ namespace QuickGoTo {
 					return true;
 				} 
 				if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToEditor) {
-					if (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) {
-						return true;
-					}
+					return FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR;
 				}
 			}
 			return false;
@@ -208,17 +201,23 @@ namespace QuickGoTo {
 		public static bool CanLastVessel {
 			get {
 				if (HighLogic.LoadedSceneIsGame) {
-					QData _lastVessel = LastVesselLastIndex;
+					QData _lastVessel = LastVesselLastIndex ();
 					if (_lastVessel != null) {
-						if (pVesselExists (_lastVessel.protoVessel)) {
-							if (!HighLogic.LoadedSceneIsFlight) {
-								return true;
-							} else {
-								if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null && _lastVessel != null) {
-									Vessel _vessel = _lastVessel.protoVessel.vesselRef;
-									if (!_vessel.isActiveVessel && (!_vessel.loaded && HighLogic.CurrentGame.Parameters.Flight.CanSwitchVesselsFar) || (_vessel.loaded && HighLogic.CurrentGame.Parameters.Flight.CanSwitchVesselsNear)) {
-										if (FlightGlobals.ActiveVessel.IsClearToSave() == ClearToSaveStatus.CLEAR) {
-											return true;
+						ProtoVessel _pVessel = _lastVessel.protoVessel;
+						if (_pVessel != null) {
+							if (pVesselExists (_pVessel)) {
+								if (!HighLogic.LoadedSceneIsFlight) {
+									return true;
+								} else {
+									if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null) {
+										Guid _guid = _pVessel.vesselID;
+										if (_guid != Guid.Empty) {
+											Vessel _vessel = FlightGlobals.Vessels.FindLast (v => v.id == _guid);
+											if (_vessel != null) {
+												if (!_vessel.isActiveVessel && (!_vessel.loaded && HighLogic.CurrentGame.Parameters.Flight.CanSwitchVesselsFar) || (_vessel.loaded && HighLogic.CurrentGame.Parameters.Flight.CanSwitchVesselsNear)) {
+													return FlightGlobals.ActiveVessel.IsClearToSave () == ClearToSaveStatus.CLEAR;
+												}
+											}
 										}
 									}
 								}
@@ -265,17 +264,40 @@ namespace QuickGoTo {
 		}
 
 		public static bool pVesselExists(ProtoVessel pvessel) {
-			return HighLogic.CurrentGame.flightState.protoVessels.Exists(pv => pv.vesselID == pvessel.vesselID);
+			FlightState _flightState = HighLogic.CurrentGame.flightState;
+			if (_flightState != null) {
+				return _flightState.protoVessels.Exists (pv => pv.vesselID == pvessel.vesselID);
+			}
+			return false;
 		}
 
-		internal static QData LastVesselLastIndex {
-			get {
-				if (LastVessels.Count < 1) {
-					return null;
-				}
-				return LastVessels [LastVessels.Count - 1];
-			}
+		internal static QData LastVesselLastIndex() {
+			int _index;
+			return LastVesselLastIndex(out _index);
 		}
+
+		internal static QData LastVesselLastIndex(out int index) {
+			index = -1;
+			QData _lastVessel = null;
+			while (LastVessels.Count > 0) {
+				index = LastVessels.Count - 1;
+				_lastVessel = LastVessels [index];
+				if (_lastVessel != null) {
+					ProtoVessel _pVessel = _lastVessel.protoVessel;
+					if (_pVessel != null) {
+						if (pVesselExists (_pVessel)) {
+							if (_lastVessel.idx != -1) {
+								break;
+							}
+						}					
+					}
+				}
+				LastVessels.RemoveAt (index);
+				Quick.Warning ("Remove a vessel from the last Vessels");
+			}
+			return _lastVessel;
+		}
+
 		internal static IEnumerator PostInit() {
 			while (ApplicationLauncher.Instance == null) {
 				yield return 0;
@@ -318,10 +340,15 @@ namespace QuickGoTo {
 		}
 
 		internal static void PostInitSC() {
-			if (LastVessels.Count == 0) {
-				List<ProtoVessel> _pVessels = HighLogic.CurrentGame.flightState.protoVessels;
-				foreach (ProtoVessel _pVessel in _pVessels) {
-					AddLastVessel (_pVessel);
+			if (LastVessels.Count < 1) {
+				FlightState _flightState = HighLogic.CurrentGame.flightState;
+				if (_flightState != null) {
+					List<ProtoVessel> _pVessels = _flightState.protoVessels;
+					foreach (ProtoVessel _pVessel in _pVessels) {
+						if (_pVessel != null) {
+							AddLastVessel (_pVessel);
+						}
+					}
 				}
 			} else {
 				List<QData> _lastVessels = LastVessels;
@@ -354,8 +381,9 @@ namespace QuickGoTo {
 		}
 
 		internal static void AddLastVessel(ProtoVessel pVessel) {
-			if (LastVesselLastIndex != null) {
-				if (LastVesselLastIndex.protoVessel.vesselID == pVessel.vesselID) {
+			QData _lastVessel = LastVesselLastIndex ();
+			if (_lastVessel!= null) {
+				if (_lastVessel.protoVessel.vesselID == pVessel.vesselID) {
 					Quick.Warning ("Kept the last Vessel: " + pVessel.vesselName);
 					return;
 				}
@@ -643,13 +671,20 @@ namespace QuickGoTo {
 		public static void LastVessel() {
 			SavedGoTo = GoTo.None;
 			if (CanLastVessel) {
-				string _saveGame = GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-				QData _lastVessel = LastVesselLastIndex;
-				FlightDriver.StartAndFocusVessel (_saveGame, _lastVessel.idx);
-				LastVessels.Remove(_lastVessel);
-				InputLockManager.ClearControlLocks ();
-				Quick.Log (GetText (GoTo.LastVessel));
-				return;
+				int _index = -1;
+				QData _lastVessel = LastVesselLastIndex (out _index);
+				if (_lastVessel != null) {
+					int _idx = _lastVessel.idx;
+					if (_idx != -1) {
+						string _saveGame = GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
+						Quick.Log (GetText (GoTo.LastVessel));
+						FlightDriver.StartAndFocusVessel (_saveGame, _idx);
+						InputLockManager.ClearControlLocks ();
+						LastVessels.RemoveAt (_index);
+						Quick.Warning ("Remove from the last Vessels: " + _lastVessel.protoVessel.vesselName);
+						return;
+					}
+				}
 			}
 			Quick.Warning ("You can't " + GetText(GoTo.LastVessel));
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.LastVessel), 10, ScreenMessageStyle.UPPER_RIGHT);

@@ -1,5 +1,5 @@
 ﻿#### QuickGoTo
-#### A plugin for Kerbal Space Program 1.0.0
+#### A plugin for Kerbal Space Program 1.0.2
 #### Copyright 2015 Malah
 
 This program is free software: you can redistribute it and/or modify
@@ -53,6 +53,14 @@ Delete the QuickGoTo folder in your KSP/GameData folder.
 
 #### Changelog
 
+v1.10 - 2015.05.03
+* New: Added an option to lock buttons OnHovering, to avoid the misclicks (false by default),
+* Fix: Corrected the Stock Toolbar which can show two buttons (thanks Enceos),
+* Fix: Corrected many errors on the LastVessel functions,
+* Fix: Corrected an error on the start of a new game,
+* Updated ToolbarWrapper to 1.7.9
+* Updated to KSP 1.02
+
 v1.00 - 2015.04.30
 * New: Added a button to access to the configuration,
 * Fix: Converted textures to DDS,
@@ -79,6 +87,7 @@ v0.10 - 2015.03.21
 
 * http://forum.kerbalspaceprogram.com/threads/95168#QuickGoTo
 * https://kerbalstuff.com/mod/653/QuickGoTo
+* http://kerbal.curseforge.com/ksp-mods/230004-quickgoto
 * https://github.com/malahx/QuickGoTo
 * Toolbar: http://forum.kerbalspaceprogram.com/threads/60863
 * SceneJumper: http://forum.kerbalspaceprogram.com/threads/66116

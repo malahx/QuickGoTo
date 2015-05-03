@@ -24,7 +24,7 @@ namespace QuickGoTo {
 	public class QData {
 		public QData (ProtoVessel pvessel) {
 			protoVessel = pvessel;
-			idx = FlightGlobals.Vessels.FindLastIndex (v => v.id == protoVessel.vesselID);
+			idx = HighLogic.CurrentGame.flightState.protoVessels.IndexOf (pvessel);
 		}
 		public int idx {
 			get;

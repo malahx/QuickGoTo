@@ -21,7 +21,7 @@ using System.Collections;
 using UnityEngine;
 
 namespace QuickGoTo {
-	public class QStockToolbar : MonoBehaviour {
+	public class QStockToolbar {
 	
 		internal static bool Enabled {
 			get {
@@ -61,15 +61,16 @@ namespace QuickGoTo {
 		}
 
 		private void OnHoverOut () {
-			if (QGUI.WindowSettings) {
+			if (QGUI.WindowSettings || !QGUI.WindowGoTo) {
 				return;
 			}
 			if (QGUI.RectGoTo == new Rect ()) {
 				QGUI.HideGoTo ();
 				return;
 			}
-			bool _isHoverGUI = QGUI.RectGoTo.Contains (Mouse.screenPos);
-			if (appLauncherButton.State != RUIToggleButton.ButtonState.TRUE && !_isHoverGUI) {
+			//bool _isHoverGUI = QGUI.RectGoTo.Contains (Mouse.screenPos);
+			//if (appLauncherButton.State != RUIToggleButton.ButtonState.TRUE && !_isHoverGUI) {
+			if (!isTrue && !isHovering) {
 				QGUI.HideGoTo ();
 			}
 		}
@@ -92,7 +93,7 @@ namespace QuickGoTo {
 
 		internal static bool isAvailable {
 			get {
-				return ApplicationLauncher.Instance != null;
+				return ApplicationLauncher.Ready && ApplicationLauncher.Instance != null;
 			}
 		}
 
@@ -104,6 +105,33 @@ namespace QuickGoTo {
 		internal bool isActive {
 			get {
 				return appLauncherButton != null && isAvailable;
+			}
+		}
+
+		internal bool isHovering {
+			get {
+				if (appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
+					return false;
+				}
+				return appLauncherButton.toggleButton.IsHovering || QGUI.RectGoTo.Contains (Mouse.screenPos);
+			}
+		}
+
+		internal bool isTrue {
+			get {
+				if (appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
+					return false;
+				}
+				return appLauncherButton.State == RUIToggleButton.ButtonState.TRUE;
+			}
+		}
+
+		internal bool isFalse {
+			get {
+				if (appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
+					return false;
+				}
+				return appLauncherButton.State == RUIToggleButton.ButtonState.FALSE;
 			}
 		}
 
@@ -130,9 +158,6 @@ namespace QuickGoTo {
 				yield break;
 			}
 			while (!isAvailable) {
-				yield return 0;
-			}
-			while (!ApplicationLauncher.Ready) {
 				yield return 0;
 			}
 			if (!ModApp) {
@@ -174,7 +199,6 @@ namespace QuickGoTo {
 					while (EngineersReport.Instance.appLauncherButton == null) {
 						yield return 0;
 					}
-					Quick.Warning ("EngineersReport.Instance.appLauncherButton.VisibleInScenes " + EngineersReport.Instance.appLauncherButton.VisibleInScenes.ToString());
 				}
 			}
 			Init ();
@@ -239,11 +263,11 @@ namespace QuickGoTo {
 			}
 			if (appLauncherButton != null) {
 				if (SetTrue) {
-					if (appLauncherButton.State == RUIToggleButton.ButtonState.FALSE) {
+					if (isFalse) {
 						appLauncherButton.SetTrue (force);
 					}
 				} else {
-					if (appLauncherButton.State == RUIToggleButton.ButtonState.TRUE) {
+					if (isTrue) {
 						appLauncherButton.SetFalse (force);
 					}
 				}

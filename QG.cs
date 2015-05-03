@@ -26,27 +26,27 @@ namespace QuickGoTo {
 	public class QuickGoTo : Quick {
 
 		internal static QuickGoTo Instance;
-		internal static QBlizzyToolbar BlizzyToolbar;
-		internal static QStockToolbar StockToolbar;
+		[KSPField(isPersistant = true)] internal static QBlizzyToolbar BlizzyToolbar;
+		[KSPField(isPersistant = true)] internal static QStockToolbar StockToolbar;
 
 		private void Awake() {
-			BlizzyToolbar = new QBlizzyToolbar ();
-			StockToolbar = new QStockToolbar ();
+			if (BlizzyToolbar == null) BlizzyToolbar = new QBlizzyToolbar ();
+			if (StockToolbar == null) StockToolbar = new QStockToolbar ();
 			GameEvents.onGUIApplicationLauncherDestroyed.Add (StockToolbar.AppLauncherDestroyed);
+			GameEvents.onGUIApplicationLauncherUnreadifying.Add (StockToolbar.AppLauncherDestroyed);
 			GameEvents.onGameSceneLoadRequested.Add (OnGameSceneLoadRequested);
 			GameEvents.onGUIAstronautComplexSpawn.Add (AstronautComplexSpawn);
 			GameEvents.onGUIAstronautComplexDespawn.Add (AstronautComplexDespawn);
 			GameEvents.onGUIRnDComplexSpawn.Add (RnDComplexSpawn);
 			GameEvents.onGUIRnDComplexDespawn.Add (RnDComplexDespawn);
+			GameEvents.onFlightReady.Add (OnFlightReady);
 			QGUI.Awake ();
 		}
 
 		private void Start() {
 			QSettings.Instance.Load ();
-			if (HighLogic.LoadedSceneIsGame) {
-				BlizzyToolbar.Start ();
-				StartCoroutine (StockToolbar.AppLauncherReady ());
-			}
+			BlizzyToolbar.Start ();
+			StartCoroutine (StockToolbar.AppLauncherReady ());
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER) {
 				StartCoroutine (QGoTo.PostInit ());
 			}
@@ -54,6 +54,26 @@ namespace QuickGoTo {
 				QGoTo.LastVessels = new List<QData>();
 			}
 			StartEach ();
+		}
+
+		private void OnFlightReady() {
+			Vessel _vessel = FlightGlobals.ActiveVessel;
+			if (_vessel != null) {
+				ProtoVessel _pVessel = _vessel.protoVessel;
+				if (_pVessel != null) {
+					int _index;
+					QData _QData = QGoTo.LastVesselLastIndex (out _index);
+					if (_QData != null) {
+						ProtoVessel _QDataPVessel = _QData.protoVessel;
+						if (_QDataPVessel != null) {
+							if (_QDataPVessel == _pVessel) {
+								QGoTo.LastVessels.RemoveAt (_index);
+								Quick.Warning ("Remove the current vessel from the last Vessels: " + _pVessel.vesselName);
+							}
+						}
+					}
+				}
+			}
 		}
 
 		private void OnGameSceneLoadRequested(GameScenes gameScenes) {
@@ -64,6 +84,7 @@ namespace QuickGoTo {
 				}
 			}
 			StockToolbar.AppLauncherDestroyed ();
+			QGUI.HideGoTo ();
 		}
 			
 		private void AstronautComplexSpawn() {
@@ -83,11 +104,13 @@ namespace QuickGoTo {
 			StopEach ();
 			BlizzyToolbar.OnDestroy ();
 			GameEvents.onGUIApplicationLauncherDestroyed.Remove (StockToolbar.AppLauncherDestroyed);
+			GameEvents.onGUIApplicationLauncherUnreadifying.Remove (StockToolbar.AppLauncherDestroyed);
 			GameEvents.onGameSceneLoadRequested.Remove (OnGameSceneLoadRequested);
 			GameEvents.onGUIAstronautComplexSpawn.Remove (AstronautComplexSpawn);
 			GameEvents.onGUIAstronautComplexDespawn.Remove (AstronautComplexDespawn);
 			GameEvents.onGUIRnDComplexSpawn.Remove (RnDComplexSpawn);
 			GameEvents.onGUIRnDComplexDespawn.Remove (RnDComplexDespawn);
+			GameEvents.onFlightReady.Remove (OnFlightReady);
 		}
 			
 		private void OnGUI() {

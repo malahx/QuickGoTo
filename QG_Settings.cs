@@ -50,6 +50,7 @@ namespace QuickGoTo {
 
 		[Persistent] public string CurrentGUISkin = HighLogic.Skin.name;
 		[Persistent] public bool ImageOnly = true;
+		[Persistent] public bool LockHover = false;
 
 		[Persistent] public bool EnableQuickExit = false;
 		[Persistent] public bool EnableQuickScroll = false;

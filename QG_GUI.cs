@@ -231,12 +231,9 @@ namespace QuickGoTo {
 			if (WindowGoTo) {
 				Refresh ();
 				if (QuickGoTo.StockToolbar.isActive) {
-					ApplicationLauncherButton _appLauncherButton = QuickGoTo.StockToolbar.appLauncherButton;
-					if (_appLauncherButton.State != RUIToggleButton.ButtonState.TRUE) {
-						if (!_appLauncherButton.toggleButton.IsHovering && !QGUI.RectGoTo.Contains (Mouse.screenPos)) {
-							HideGoTo ();
-							return;
-						}
+					if (!QuickGoTo.StockToolbar.isTrue && !QuickGoTo.StockToolbar.isHovering) {
+						HideGoTo ();
+						return;
 					}
 				}
 				DrawGoTo (RectGoTo);
@@ -265,11 +262,16 @@ namespace QuickGoTo {
 			GUILayout.Space (5);
 
 			GUILayout.BeginHorizontal ();
-			bool _bool = GUILayout.Toggle (QSettings.Instance.ImageOnly, "Panel with only the icons", GUILayout.Width (450));
+			bool _bool = GUILayout.Toggle (QSettings.Instance.ImageOnly, "Panel with only the icons", GUILayout.Width (300));
 			if (_bool != QSettings.Instance.ImageOnly) {
 				QSettings.Instance.ImageOnly = _bool;
 				RefreshStyle (true);
 				RefreshTexture ();
+			}
+			if (QSettings.Instance.StockToolBar) {
+				QSettings.Instance.LockHover = GUILayout.Toggle (QSettings.Instance.LockHover, "Lock buttons on hover", GUILayout.Width (300));
+			} else {
+				GUILayout.Space (300);
 			}
 			GetSkin ();
 			GUILayout.EndHorizontal ();
@@ -332,9 +334,12 @@ namespace QuickGoTo {
 
 		private static void DrawGoTo(Rect rectGoTo) {
 			int _rect = 3;
+			bool _lockHover = QSettings.Instance.LockHover && QSettings.Instance.StockToolBar && QuickGoTo.StockToolbar.isHovering && !QuickGoTo.StockToolbar.isTrue;
 			GUILayout.BeginArea (rectGoTo);
 			GUILayout.BeginVertical ();
 			GUILayout.Space (3);
+
+			GUI.enabled = !_lockHover;
 
 			if (!QGoTo.CanMainMenu) {
 				GUI.enabled = false;
@@ -357,7 +362,7 @@ namespace QuickGoTo {
 				}
 				GUILayout.EndHorizontal ();
 			}
-			GUI.enabled = true;
+			GUI.enabled = !_lockHover;
 
 			if (QSettings.Instance.EnableGoToSpaceCenter) {
 				_rect += ButtonHeight + GUISpace;				
@@ -370,7 +375,7 @@ namespace QuickGoTo {
 					QGoTo.spaceCenter ();
 				}
 				GUILayout.EndHorizontal ();
-				GUI.enabled = true;
+				GUI.enabled = !_lockHover;
 			}
 
 			if (HighLogic.CurrentGame.Parameters.Flight.CanLeaveToEditor || !HighLogic.LoadedSceneIsFlight) {
@@ -385,7 +390,7 @@ namespace QuickGoTo {
 						QGoTo.VAB ();
 					}
 					GUILayout.EndHorizontal ();
-					GUI.enabled = true;
+					GUI.enabled = !_lockHover;
 				}
 				if (QSettings.Instance.EnableGoToSPH) {
 					_rect += ButtonHeight + GUISpace;					
@@ -398,7 +403,7 @@ namespace QuickGoTo {
 						QGoTo.SPH ();
 					}
 					GUILayout.EndHorizontal ();
-					GUI.enabled = true;
+					GUI.enabled = !_lockHover;
 				}
 			}
 
@@ -413,7 +418,7 @@ namespace QuickGoTo {
 					QGoTo.trackingStation ();
 				}
 				GUILayout.EndHorizontal ();
-				GUI.enabled = true;
+				GUI.enabled = !_lockHover;
 			}
 
 			if (!QGoTo.CanSpaceCenter && HighLogic.LoadedScene != GameScenes.SPACECENTER) {
@@ -462,7 +467,7 @@ namespace QuickGoTo {
 				}
 				GUILayout.EndHorizontal ();
 			}
-			GUI.enabled = true;
+			GUI.enabled = !_lockHover;
 		
 			if (QSettings.Instance.EnableGoToLastVessel) {
 				_rect += ButtonHeight + GUISpace;				
@@ -475,7 +480,7 @@ namespace QuickGoTo {
 					QGoTo.LastVessel ();
 				}
 				GUILayout.EndHorizontal ();
-				GUI.enabled = true;
+				GUI.enabled = !_lockHover;
 			}
 
 			if (HighLogic.LoadedSceneIsFlight) {
@@ -501,7 +506,7 @@ namespace QuickGoTo {
 							QGoTo.Revert ();
 						}
 						GUILayout.EndHorizontal ();
-						GUI.enabled = true;
+						GUI.enabled = !_lockHover;
 					}
 				}
 				
@@ -517,7 +522,7 @@ namespace QuickGoTo {
 							QGoTo.RevertToEditor ();
 						}
 						GUILayout.EndHorizontal ();
-						GUI.enabled = true;
+						GUI.enabled = !_lockHover;
 					}
 				}
 
@@ -533,7 +538,7 @@ namespace QuickGoTo {
 							QGoTo.RevertToSpaceCenter ();
 						}
 						GUILayout.EndHorizontal ();
-						GUI.enabled = true;
+						GUI.enabled = !_lockHover;
 					}
 				}
 			}
