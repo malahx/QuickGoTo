@@ -53,6 +53,9 @@ Delete the QuickGoTo folder in your KSP/GameData folder.
 
 #### Changelog
 
+v1.11 - 2015.05.12
+* Fix: Corrected the Stock Toolbar button which can be shown on the Main menu with QuickHide.
+
 v1.10 - 2015.05.03
 * New: Added an option to lock buttons OnHovering, to avoid the misclicks (false by default),
 * Fix: Corrected the Stock Toolbar which can show two buttons (thanks Enceos),

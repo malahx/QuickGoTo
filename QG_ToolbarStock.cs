@@ -21,20 +21,27 @@ using System.Collections;
 using UnityEngine;
 
 namespace QuickGoTo {
-	public class QStockToolbar {
-	
+	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+	public class QStockToolbar : MonoBehaviour {
+
 		internal static bool Enabled {
 			get {
 				return QSettings.Instance.StockToolBar;
 			}
 		}
-
+			
 		private static bool ModApp {
 			get {
 				return QSettings.Instance.StockToolBar_ModApp;
 			}
 		}
 
+		private static bool CanUseIt {
+			get {
+				return HighLogic.LoadedSceneIsGame;
+			}
+		}
+		
 		private ApplicationLauncher.AppScenes AppScenes = ApplicationLauncher.AppScenes.ALWAYS;
 		private static string TexturePath = Quick.MOD + "/Textures/StockToolBar";
 
@@ -68,8 +75,6 @@ namespace QuickGoTo {
 				QGUI.HideGoTo ();
 				return;
 			}
-			//bool _isHoverGUI = QGUI.RectGoTo.Contains (Mouse.screenPos);
-			//if (appLauncherButton.State != RUIToggleButton.ButtonState.TRUE && !_isHoverGUI) {
 			if (!isTrue && !isHovering) {
 				QGUI.HideGoTo ();
 			}
@@ -89,7 +94,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		internal ApplicationLauncherButton appLauncherButton;
+		private ApplicationLauncherButton appLauncherButton;
 
 		internal static bool isAvailable {
 			get {
@@ -153,67 +158,50 @@ namespace QuickGoTo {
 			}
 		}
 
-		internal IEnumerator AppLauncherReady() {
-			if (!Enabled || !HighLogic.LoadedSceneIsGame) {
-				yield break;
+		internal static QStockToolbar Instance {
+			get;
+			private set;
+		}
+
+		private void Awake() {
+			if (Instance != null) {
+				Destroy (this);
+				return;
 			}
-			while (!isAvailable) {
-				yield return 0;
-			}
-			if (!ModApp) {
-				while (MessageSystem.Instance == null) {
-					yield return 0;
-				}
-				while (MessageSystem.Instance.appLauncherButton == null) {
-					yield return 0;
-				}
-				if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) {
-					while (ContractsApp.Instance == null) {
-						yield return 0;
-					}
-					while (ContractsApp.Instance.appLauncherButton == null) {
-						yield return 0;
-					}
-				}
-				if (HighLogic.LoadedSceneIsFlight) {
-					while (ResourceDisplay.Instance == null) {
-						yield return 0;
-					}
-					while (ResourceDisplay.Instance.appLauncherButton == null) {
-						yield return 0;
-					}
-					if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER || HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX) {
-						while (CurrencyWidgetsApp.FindObjectOfType (typeof(CurrencyWidgetsApp)) == null) {
-							yield return 0;
-						}
-						CurrencyWidgetsApp _currencyWidgetsApp = (CurrencyWidgetsApp)CurrencyWidgetsApp.FindObjectOfType (typeof(CurrencyWidgetsApp));
-						while (_currencyWidgetsApp.appLauncherButton == null) {
-							yield return 0;
-						}
-					}
-				}
-				if (HighLogic.LoadedSceneIsEditor) {
-					while (EngineersReport.Ready && EngineersReport.Instance == null) {
-						yield return 0;
-					}
-					while (EngineersReport.Instance.appLauncherButton == null) {
-						yield return 0;
-					}
-				}
+			Instance = this;
+			DontDestroyOnLoad (Instance);
+			GameEvents.onGUIApplicationLauncherReady.Add (AppLauncherReady);
+			GameEvents.onGUIApplicationLauncherDestroyed.Add (AppLauncherDestroyed);
+			GameEvents.onLevelWasLoadedGUIReady.Add (AppLauncherDestroyed);
+		}
+			
+		private void AppLauncherReady() {
+			QSettings.Instance.Load ();
+			if (!Enabled) {
+				return;
 			}
 			Init ();
 		}
 
-		internal void AppLauncherDestroyed(GameScenes gameScenes) {
-			AppLauncherDestroyed ();
+		private void AppLauncherDestroyed(GameScenes gameScene) {
+			if (CanUseIt) {
+				return;
+			}
+			Destroy ();
 		}
-
-		internal void AppLauncherDestroyed() {
+		
+		private void AppLauncherDestroyed() {
 			Destroy ();
 		}
 
+		private void OnDestroy() {
+			GameEvents.onGUIApplicationLauncherReady.Remove (AppLauncherReady);
+			GameEvents.onGUIApplicationLauncherDestroyed.Remove (AppLauncherDestroyed);
+			GameEvents.onLevelWasLoadedGUIReady.Remove (AppLauncherDestroyed);
+		}
+
 		private void Init() {
-			if (!isAvailable) {
+			if (!isAvailable || !CanUseIt) {
 				return;
 			}
 			if (appLauncherButton == null) {
@@ -227,7 +215,7 @@ namespace QuickGoTo {
 				ApplicationLauncher.Instance.AddOnHideCallback (OnHide);
 			}
 		}
-			
+
 		private void OnShow() {
 			QGUI.ShowGoTo ();
 			ApplicationLauncher.Instance.RemoveOnShowCallback (OnShow);
@@ -247,9 +235,6 @@ namespace QuickGoTo {
 		}
 
 		private void Destroy() {
-			if (!isAvailable) {
-				return;
-			}
 			if (appLauncherButton != null) {
 				ApplicationLauncher.Instance.RemoveModApplication (appLauncherButton);
 				ApplicationLauncher.Instance.RemoveApplication (appLauncherButton);
@@ -263,11 +248,11 @@ namespace QuickGoTo {
 			}
 			if (appLauncherButton != null) {
 				if (SetTrue) {
-					if (isFalse) {
+					if (appLauncherButton.State == RUIToggleButton.ButtonState.FALSE) {
 						appLauncherButton.SetTrue (force);
 					}
 				} else {
-					if (isTrue) {
+					if (appLauncherButton.State == RUIToggleButton.ButtonState.TRUE) {
 						appLauncherButton.SetFalse (force);
 					}
 				}

@@ -137,8 +137,8 @@ namespace QuickGoTo {
 				RectGoTo.y = (Screen.height - RectGoTo.height) / 2;
 				if (QStockToolbar.Enabled) {
 					Rect _Spos = new Rect ();
-					if (QuickGoTo.StockToolbar.isActive) {
-						_Spos = QuickGoTo.StockToolbar.Position;
+					if (QStockToolbar.Instance.isActive) {
+						_Spos = QStockToolbar.Instance.Position;
 					}
 					int _width = (QSettings.Instance.ImageOnly ? (HighLogic.LoadedSceneIsEditor ? 75 : 5) : (HighLogic.LoadedSceneIsEditor ? 325 : 255));
 					if (_Spos == new Rect () || (!QSettings.Instance.ImageOnly && Screen.width - _Spos.x < _width)) {
@@ -193,7 +193,7 @@ namespace QuickGoTo {
 		public static void Settings() {
 			SettingsSwitch ();
 			if (!WindowSettings) {
-				QuickGoTo.StockToolbar.Reset ();
+				QStockToolbar.Instance.Reset ();
 				QuickGoTo.BlizzyToolbar.Reset ();
 				QSettings.Instance.Save ();
 			}
@@ -201,7 +201,7 @@ namespace QuickGoTo {
 
 		internal static void SettingsSwitch() {
 			WindowSettings = !WindowSettings;
-			QuickGoTo.StockToolbar.Set (WindowSettings);
+			QStockToolbar.Instance.Set (WindowSettings);
 			Lock (WindowSettings, ControlTypes.KSC_ALL | ControlTypes.TRACKINGSTATION_UI | ControlTypes.CAMERACONTROLS | ControlTypes.MAP);
 			WindowGoTo = false;
 			RectGoTo.height = 0;
@@ -209,7 +209,7 @@ namespace QuickGoTo {
 
 		internal static void ToggleGoTo() {
 			WindowGoTo = !WindowGoTo;
-			QuickGoTo.StockToolbar.Set (WindowGoTo);
+			QStockToolbar.Instance.Set (WindowGoTo);
 			Lock (WindowGoTo, ControlTypes.KSC_ALL | ControlTypes.TRACKINGSTATION_UI | ControlTypes.CAMERACONTROLS | ControlTypes.MAP);
 		}
 
@@ -230,8 +230,8 @@ namespace QuickGoTo {
 			}
 			if (WindowGoTo) {
 				Refresh ();
-				if (QuickGoTo.StockToolbar.isActive) {
-					if (!QuickGoTo.StockToolbar.isTrue && !QuickGoTo.StockToolbar.isHovering) {
+				if (QStockToolbar.Instance.isActive) {
+					if (!QStockToolbar.Instance.isTrue && !QStockToolbar.Instance.isHovering) {
 						HideGoTo ();
 						return;
 					}
@@ -334,7 +334,7 @@ namespace QuickGoTo {
 
 		private static void DrawGoTo(Rect rectGoTo) {
 			int _rect = 3;
-			bool _lockHover = QSettings.Instance.LockHover && QSettings.Instance.StockToolBar && QuickGoTo.StockToolbar.isHovering && !QuickGoTo.StockToolbar.isTrue;
+			bool _lockHover = QSettings.Instance.LockHover && QSettings.Instance.StockToolBar && QStockToolbar.Instance.isHovering && !QStockToolbar.Instance.isTrue;
 			GUILayout.BeginArea (rectGoTo);
 			GUILayout.BeginVertical ();
 			GUILayout.Space (3);

@@ -27,13 +27,9 @@ namespace QuickGoTo {
 
 		internal static QuickGoTo Instance;
 		[KSPField(isPersistant = true)] internal static QBlizzyToolbar BlizzyToolbar;
-		[KSPField(isPersistant = true)] internal static QStockToolbar StockToolbar;
 
 		private void Awake() {
 			if (BlizzyToolbar == null) BlizzyToolbar = new QBlizzyToolbar ();
-			if (StockToolbar == null) StockToolbar = new QStockToolbar ();
-			GameEvents.onGUIApplicationLauncherDestroyed.Add (StockToolbar.AppLauncherDestroyed);
-			GameEvents.onGUIApplicationLauncherUnreadifying.Add (StockToolbar.AppLauncherDestroyed);
 			GameEvents.onGameSceneLoadRequested.Add (OnGameSceneLoadRequested);
 			GameEvents.onGUIAstronautComplexSpawn.Add (AstronautComplexSpawn);
 			GameEvents.onGUIAstronautComplexDespawn.Add (AstronautComplexDespawn);
@@ -46,7 +42,6 @@ namespace QuickGoTo {
 		private void Start() {
 			QSettings.Instance.Load ();
 			BlizzyToolbar.Start ();
-			StartCoroutine (StockToolbar.AppLauncherReady ());
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER) {
 				StartCoroutine (QGoTo.PostInit ());
 			}
@@ -83,7 +78,6 @@ namespace QuickGoTo {
 					QGoTo.AddLastVessel(_vessel.protoVessel);
 				}
 			}
-			StockToolbar.AppLauncherDestroyed ();
 			QGUI.HideGoTo ();
 		}
 			
@@ -103,8 +97,6 @@ namespace QuickGoTo {
 		private void OnDestroy() {
 			StopEach ();
 			BlizzyToolbar.OnDestroy ();
-			GameEvents.onGUIApplicationLauncherDestroyed.Remove (StockToolbar.AppLauncherDestroyed);
-			GameEvents.onGUIApplicationLauncherUnreadifying.Remove (StockToolbar.AppLauncherDestroyed);
 			GameEvents.onGameSceneLoadRequested.Remove (OnGameSceneLoadRequested);
 			GameEvents.onGUIAstronautComplexSpawn.Remove (AstronautComplexSpawn);
 			GameEvents.onGUIAstronautComplexDespawn.Remove (AstronautComplexDespawn);
