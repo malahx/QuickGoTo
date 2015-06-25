@@ -71,10 +71,25 @@ namespace QuickGoTo {
 
 		internal static Rect RectSettings;
 		internal static Rect RectGoTo;
+		internal static Rect RectButton = new Rect (Screen.width - 90, 0, 40, 40);
 		internal static GUIStyle GoToButtonStyle;
 		private static GUIStyle LabelStyle;
 		internal static int ButtonHeight;
 		private static int GUISpace = 4;
+
+		private static bool needButton {
+			get {
+				if (!QSettings.Instance.EnableBatButton) {
+					return false;
+				}
+				if (QStockToolbar.Instance != null) {
+					if (QStockToolbar.Instance.isActive) {
+						return false;
+					}
+				}
+				return QGoTo.isAdministration || QGoTo.isAstronautComplex || QGoTo.isMissionControl || QGoTo.isRnD;
+			}
+		}
 
 		internal static void Awake() {
 			RectSettings = new Rect ();
@@ -136,11 +151,18 @@ namespace QuickGoTo {
 				RectGoTo.x = (Screen.width - RectGoTo.width) / 2;
 				RectGoTo.y = (Screen.height - RectGoTo.height) / 2;
 				if (QStockToolbar.Enabled) {
-					Rect _Spos = new Rect ();
+					Rect _Spos;
 					if (QStockToolbar.Instance.isActive) {
 						_Spos = QStockToolbar.Instance.Position;
+					} else if (needButton) {
+						_Spos = RectButton;
+					} else {
+						_Spos = new Rect ();
 					}
 					int _width = (QSettings.Instance.ImageOnly ? (HighLogic.LoadedSceneIsEditor ? 75 : 5) : (HighLogic.LoadedSceneIsEditor ? 325 : 255));
+					if (QSettings.Instance.CenterText) {
+						_Spos.x = _Spos.x + 20 - RectGoTo.width / 2;
+					}
 					if (_Spos == new Rect () || (!QSettings.Instance.ImageOnly && Screen.width - _Spos.x < _width)) {
 						RectGoTo.x = Screen.width - _width;
 					} else {
@@ -164,6 +186,9 @@ namespace QuickGoTo {
 		}
 
 		internal static void Refresh() {
+			if (!WindowSettings && !WindowGoTo && !needButton) {
+				return;
+			}
 			GUI.skin = AssetBase.GetGUISkin (QSettings.Instance.CurrentGUISkin);
 			RefreshRect ();
 			RefreshStyle ();
@@ -224,12 +249,14 @@ namespace QuickGoTo {
 		}
 
 		internal static void OnGUI() {
+			Refresh ();
+			if (needButton) {
+				DrawButton (RectButton);
+			}
 			if (WindowSettings) {
-				Refresh ();
 				RectSettings = GUILayout.Window (1584654, RectSettings, DrawSettings, Quick.MOD + " " + Quick.VERSION, GUILayout.Width (RectSettings.width), GUILayout.ExpandHeight (true));
 			}
 			if (WindowGoTo) {
-				Refresh ();
 				if (QStockToolbar.Instance.isActive) {
 					if (!QStockToolbar.Instance.isTrue && !QStockToolbar.Instance.isHovering) {
 						HideGoTo ();
@@ -269,11 +296,28 @@ namespace QuickGoTo {
 				RefreshTexture ();
 			}
 			if (QSettings.Instance.StockToolBar) {
+				if (!QSettings.Instance.ImageOnly) {
+					QSettings.Instance.CenterText = GUILayout.Toggle (QSettings.Instance.CenterText, "Center the buttons", GUILayout.Width (300));
+				}
 				QSettings.Instance.LockHover = GUILayout.Toggle (QSettings.Instance.LockHover, "Lock buttons on hover", GUILayout.Width (300));
-			} else {
-				GUILayout.Space (300);
 			}
+			if (QSettings.Instance.StockToolBar && !QSettings.Instance.ImageOnly) {
+				GUILayout.EndHorizontal ();
+				GUILayout.Space (5);
+				GUILayout.BeginHorizontal ();
+			}
+
+			QSettings.Instance.EnableBatButton = GUILayout.Toggle (QSettings.Instance.EnableBatButton, "Enable button in the batiments", GUILayout.Width (300));
+
+			if (QSettings.Instance.StockToolBar && QSettings.Instance.ImageOnly) {
+				GUILayout.EndHorizontal ();
+				GUILayout.Space (5);
+
+				GUILayout.BeginHorizontal ();
+			}
+
 			GetSkin ();
+	
 			GUILayout.EndHorizontal ();
 			GUILayout.Space (5);
 
@@ -334,7 +378,7 @@ namespace QuickGoTo {
 
 		private static void DrawGoTo(Rect rectGoTo) {
 			int _rect = 3;
-			bool _lockHover = QSettings.Instance.LockHover && QSettings.Instance.StockToolBar && QStockToolbar.Instance.isHovering && !QStockToolbar.Instance.isTrue;
+			bool _lockHover = QSettings.Instance.LockHover && QSettings.Instance.StockToolBar && (QStockToolbar.Instance.isHovering) && !QStockToolbar.Instance.isTrue;
 			GUILayout.BeginArea (rectGoTo);
 			GUILayout.BeginVertical ();
 			GUILayout.Space (3);
@@ -554,6 +598,14 @@ namespace QuickGoTo {
 			GUILayout.EndVertical ();
 			GUILayout.EndArea ();
 			RectGoTo.height = _rect;
+		}
+
+		private static void DrawButton(Rect rectButton) {
+			GUILayout.BeginArea (rectButton);
+			if (GUILayout.Button (QStockToolbar.GetTexture, GUILayout.Width(40), GUILayout.Height(40))) {
+				QGUI.ToggleGoTo ();
+			}
+			GUILayout.EndArea();
 		}
 
 		private static void GetSkin() {

@@ -88,7 +88,7 @@ namespace QuickGoTo {
 			QGUI.HideGoTo ();
 		}
 			
-		private Texture2D GetTexture {
+		internal static Texture2D GetTexture {
 			get {
 				return GameDatabase.Instance.GetTexture(TexturePath, false);
 			}

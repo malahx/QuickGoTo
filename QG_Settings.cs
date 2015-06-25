@@ -47,10 +47,12 @@ namespace QuickGoTo {
 		[Persistent] public bool StockToolBar = true;
 		[Persistent] public bool BlizzyToolBar = true;
 		[Persistent] public bool StockToolBar_ModApp = true;
+		[Persistent] public bool EnableBatButton = true;
 
 		[Persistent] public string CurrentGUISkin = HighLogic.Skin.name;
 		[Persistent] public bool ImageOnly = true;
 		[Persistent] public bool LockHover = false;
+		[Persistent] public bool CenterText = true;
 
 		[Persistent] public bool EnableQuickExit = false;
 		[Persistent] public bool EnableQuickScroll = false;

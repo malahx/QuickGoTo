@@ -1,5 +1,5 @@
 ﻿#### QuickGoTo
-#### A plugin for Kerbal Space Program 1.0.2
+#### A plugin for Kerbal Space Program 1.0.X
 #### Copyright 2015 Malah
 
 This program is free software: you can redistribute it and/or modify
@@ -53,6 +53,11 @@ Delete the QuickGoTo folder in your KSP/GameData folder.
 
 #### Changelog
 
+v1.20 - 2015.06.25
+* New: Added a new button when you are in a batiment without the stock toolbar,
+* New: Added an option to center the QuickGoTo's toolbar over the button of the stock toolbar when icon with text are selected,
+* Updated to KSP 1.0.X
+
 v1.11 - 2015.05.12
 * Fix: Corrected the Stock Toolbar button which can be shown on the Main menu with QuickHide.
 
@@ -62,7 +67,7 @@ v1.10 - 2015.05.03
 * Fix: Corrected many errors on the LastVessel functions,
 * Fix: Corrected an error on the start of a new game,
 * Updated ToolbarWrapper to 1.7.9
-* Updated to KSP 1.02
+* Updated to KSP 1.0.2
 
 v1.00 - 2015.04.30
 * New: Added a button to access to the configuration,
@@ -71,7 +76,7 @@ v1.00 - 2015.04.30
 * Fix: Enhanced the toolbars functions,
 * Fix: Corrected an error on the save of the LastVessel,
 * Fix: Corrected some minor bug,
-* Updated to KSP 1.00
+* Updated to KSP 1.0.0
 
 v0.10 - 2015.03.21
 * Initial pre release
