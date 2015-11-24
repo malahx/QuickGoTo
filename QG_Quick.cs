@@ -24,7 +24,7 @@ using UnityEngine;
 
 namespace QuickGoTo {
 
-	public class Quick : MonoBehaviour {
+	public partial class QuickGoTo : MonoBehaviour {
 
 		public readonly static string VERSION = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Major + "." + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Minor + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Build;
 		public readonly static string MOD = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Name;

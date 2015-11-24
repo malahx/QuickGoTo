@@ -25,7 +25,7 @@ namespace QuickGoTo {
 
 		public readonly static QSettings Instance = new QSettings();
 
-		internal static string FileConfig = KSPUtil.ApplicationRootPath + "GameData/" + Quick.MOD + "/Config.txt";
+		internal static string FileConfig = KSPUtil.ApplicationRootPath + "GameData/" + QuickGoTo.MOD + "/Config.txt";
 
 		[Persistent] public bool EnableGoToTrackingStation = true;
 		[Persistent] public bool EnableGoToSpaceCenter = true;
@@ -47,6 +47,7 @@ namespace QuickGoTo {
 		[Persistent] public bool StockToolBar = true;
 		[Persistent] public bool BlizzyToolBar = true;
 		[Persistent] public bool StockToolBar_ModApp = true;
+		[Persistent] public bool StockToolBar_OnHover = true;
 		[Persistent] public bool EnableBatButton = true;
 
 		[Persistent] public string CurrentGUISkin = HighLogic.Skin.name;
@@ -64,7 +65,7 @@ namespace QuickGoTo {
 		public void Save() {
 			ConfigNode _temp = ConfigNode.CreateConfigFromObject(this, new ConfigNode());
 			_temp.Save(FileConfig);
-			Quick.Log ("Settings Saved");
+			QuickGoTo.Log ("Settings Saved");
 		}
 		public void Load() {
 			if (File.Exists (FileConfig)) {
@@ -74,7 +75,7 @@ namespace QuickGoTo {
 				} catch {
 					Save ();
 				}
-				Quick.Log ("Settings Loaded");
+				QuickGoTo.Log ("Settings Loaded");
 			} else {
 				Save ();
 			}

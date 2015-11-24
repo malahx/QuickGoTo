@@ -53,6 +53,12 @@ Delete the QuickGoTo folder in your KSP/GameData folder.
 
 #### Changelog
 
+v1.21 - 2015.11.24
+* New: Added an option to disable the on hover function,
+* New: Added a timer of 1 second to hide the hovering of the QuickGoTo toolbar,
+* Fix: Some minor bug,
+* Compiled against KSP 1.0.5
+
 v1.20 - 2015.06.25
 * New: Added a new button when you are in a batiment without the stock toolbar,
 * New: Added an option to center the QuickGoTo's toolbar over the button of the stock toolbar when icon with text are selected,

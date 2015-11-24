@@ -23,7 +23,7 @@ using UnityEngine;
 namespace QuickGoTo {
 
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	public class QuickGoTo : Quick {
+	public partial class QuickGoTo : MonoBehaviour {
 
 		internal static QuickGoTo Instance;
 		[KSPField(isPersistant = true)] internal static QBlizzyToolbar BlizzyToolbar;
@@ -63,7 +63,7 @@ namespace QuickGoTo {
 						if (_QDataPVessel != null) {
 							if (_QDataPVessel == _pVessel) {
 								QGoTo.LastVessels.RemoveAt (_index);
-								Quick.Warning ("Remove the current vessel from the last Vessels: " + _pVessel.vesselName);
+								QuickGoTo.Warning ("Remove the current vessel from the last Vessels: " + _pVessel.vesselName);
 							}
 						}
 					}
@@ -78,7 +78,7 @@ namespace QuickGoTo {
 					QGoTo.AddLastVessel(_vessel.protoVessel);
 				}
 			}
-			QGUI.HideGoTo ();
+			QGUI.HideGoTo (true);
 		}
 			
 		private void AstronautComplexSpawn() {

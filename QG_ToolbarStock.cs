@@ -43,7 +43,7 @@ namespace QuickGoTo {
 		}
 		
 		private ApplicationLauncher.AppScenes AppScenes = ApplicationLauncher.AppScenes.ALWAYS;
-		private static string TexturePath = Quick.MOD + "/Textures/StockToolBar";
+		private static string TexturePath = QuickGoTo.MOD + "/Textures/StockToolBar";
 
 		private void OnTrue () {
 			if (QGUI.WindowSettings) {
@@ -61,14 +61,14 @@ namespace QuickGoTo {
 		}
 
 		private void OnHover () {
-			if (QGUI.WindowSettings) {
+			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.WindowSettings) {
 				return;
 			}
 			QGUI.ShowGoTo ();
 		}
 
 		private void OnHoverOut () {
-			if (QGUI.WindowSettings || !QGUI.WindowGoTo) {
+			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.WindowSettings || !QGUI.WindowGoTo) {
 				return;
 			}
 			if (QGUI.RectGoTo == new Rect ()) {
@@ -81,7 +81,6 @@ namespace QuickGoTo {
 		}
 
 		private void OnEnable () {
-			QGUI.ShowGoTo ();
 		}
 
 		private void OnDisable () {
@@ -115,7 +114,7 @@ namespace QuickGoTo {
 
 		internal bool isHovering {
 			get {
-				if (appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
+				if (!QSettings.Instance.StockToolBar_OnHover || appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
 					return false;
 				}
 				return appLauncherButton.toggleButton.IsHovering || QGUI.RectGoTo.Contains (Mouse.screenPos);

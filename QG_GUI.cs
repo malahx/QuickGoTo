@@ -23,22 +23,22 @@ namespace QuickGoTo {
 
 	public class QGUI : MonoBehaviour {
 
-		private static string VAB_TexturePath = Quick.MOD + "/Textures/StockVAB";
-		private static string TS_TexturePath = Quick.MOD + "/Textures/StockTS";
-		private static string SPH_TexturePath = Quick.MOD + "/Textures/StockSPH";
-		private static string Sett_TexturePath = Quick.MOD + "/Textures/StockSett";
-		private static string SC_TexturePath = Quick.MOD + "/Textures/StockSC";
-		private static string RvSC_TexturePath = Quick.MOD + "/Textures/StockRvSC";
-		private static string RvED_TexturePath = Quick.MOD + "/Textures/StockRvED";
-		private static string Rv_TexturePath = Quick.MOD + "/Textures/StockRv";
-		private static string RnD_TexturePath = Quick.MOD + "/Textures/StockRnD";
-		private static string Rc_TexturePath = Quick.MOD + "/Textures/StockRc";
-		private static string MI_TexturePath = Quick.MOD + "/Textures/StockMI";
-		private static string Main_TexturePath = Quick.MOD + "/Textures/StockMain";
-		private static string Lves_TexturePath = Quick.MOD + "/Textures/StockLves";
-		private static string Astr_TexturePath = Quick.MOD + "/Textures/StockAstr";
-		private static string Admi_TexturePath = Quick.MOD + "/Textures/StockAdmi";
-		private static string Conf_TexturePath = Quick.MOD + "/Textures/StockConf";
+		private static string VAB_TexturePath = QuickGoTo.MOD + "/Textures/StockVAB";
+		private static string TS_TexturePath = QuickGoTo.MOD + "/Textures/StockTS";
+		private static string SPH_TexturePath = QuickGoTo.MOD + "/Textures/StockSPH";
+		private static string Sett_TexturePath = QuickGoTo.MOD + "/Textures/StockSett";
+		private static string SC_TexturePath = QuickGoTo.MOD + "/Textures/StockSC";
+		private static string RvSC_TexturePath = QuickGoTo.MOD + "/Textures/StockRvSC";
+		private static string RvED_TexturePath = QuickGoTo.MOD + "/Textures/StockRvED";
+		private static string Rv_TexturePath = QuickGoTo.MOD + "/Textures/StockRv";
+		private static string RnD_TexturePath = QuickGoTo.MOD + "/Textures/StockRnD";
+		private static string Rc_TexturePath = QuickGoTo.MOD + "/Textures/StockRc";
+		private static string MI_TexturePath = QuickGoTo.MOD + "/Textures/StockMI";
+		private static string Main_TexturePath = QuickGoTo.MOD + "/Textures/StockMain";
+		private static string Lves_TexturePath = QuickGoTo.MOD + "/Textures/StockLves";
+		private static string Astr_TexturePath = QuickGoTo.MOD + "/Textures/StockAstr";
+		private static string Admi_TexturePath = QuickGoTo.MOD + "/Textures/StockAdmi";
+		private static string Conf_TexturePath = QuickGoTo.MOD + "/Textures/StockConf";
 
 		private static Texture2D VAB_Texture;
 		private static Texture2D TS_Texture;
@@ -66,8 +66,24 @@ namespace QuickGoTo {
 			"GameSkin"
 		};
 
+		internal static bool WindowGoTo {
+			get {
+				return windowGoTo || (keepGoTo && QSettings.Instance.StockToolBar_OnHover);
+			}
+			set {
+				bool _windowGoTo = value;
+				if (QStockToolbar.Instance.isActive && QSettings.Instance.StockToolBar_OnHover && !QGoTo.isBat && windowGoTo && !_windowGoTo) {
+					keepGoTo = true;
+					keepDate = DateTime.Now;
+				}
+				windowGoTo = _windowGoTo;
+			}
+		}
+
 		internal static bool WindowSettings = false;
-		internal static bool WindowGoTo = false;
+		internal static bool windowGoTo = false;
+		private static bool keepGoTo = false;
+		private static DateTime keepDate = DateTime.Now;
 
 		internal static Rect RectSettings;
 		internal static Rect RectGoTo;
@@ -197,21 +213,21 @@ namespace QuickGoTo {
 		private static void Lock(bool activate, ControlTypes Ctrl) {
 			if (HighLogic.LoadedSceneIsEditor) {
 				if (activate) {
-					EditorLogic.fetch.Lock(true, true, true, "EditorLock" + Quick.MOD);
+					EditorLogic.fetch.Lock(true, true, true, "EditorLock" + QuickGoTo.MOD);
 				} else {
-					EditorLogic.fetch.Unlock ("EditorLock" + Quick.MOD);
+					EditorLogic.fetch.Unlock ("EditorLock" + QuickGoTo.MOD);
 				}
 			}
 			if (activate) {
-				InputLockManager.SetControlLock (Ctrl, "Lock" + Quick.MOD);
+				InputLockManager.SetControlLock (Ctrl, "Lock" + QuickGoTo.MOD);
 			} else {
-				InputLockManager.RemoveControlLock ("Lock" + Quick.MOD);
+				InputLockManager.RemoveControlLock ("Lock" + QuickGoTo.MOD);
 			}
-			if (InputLockManager.GetControlLock ("Lock" + Quick.MOD) != ControlTypes.None) {
-				InputLockManager.RemoveControlLock ("Lock" + Quick.MOD);
+			if (InputLockManager.GetControlLock ("Lock" + QuickGoTo.MOD) != ControlTypes.None) {
+				InputLockManager.RemoveControlLock ("Lock" + QuickGoTo.MOD);
 			}
-			if (InputLockManager.GetControlLock ("EditorLock" + Quick.MOD) != ControlTypes.None) {
-				InputLockManager.RemoveControlLock ("EditorLock" + Quick.MOD);
+			if (InputLockManager.GetControlLock ("EditorLock" + QuickGoTo.MOD) != ControlTypes.None) {
+				InputLockManager.RemoveControlLock ("EditorLock" + QuickGoTo.MOD);
 			}
 		}
 
@@ -238,8 +254,15 @@ namespace QuickGoTo {
 			Lock (WindowGoTo, ControlTypes.KSC_ALL | ControlTypes.TRACKINGSTATION_UI | ControlTypes.CAMERACONTROLS | ControlTypes.MAP);
 		}
 
-		internal static void HideGoTo() {
-			WindowGoTo = false;
+		internal static void HideGoTo(bool force = false) {
+			if (force) {
+				windowGoTo = false;
+				if (QStockToolbar.Instance != null) {
+					QStockToolbar.Instance.Set (WindowGoTo);
+				}
+			} else {
+				WindowGoTo = false;
+			}
 			Lock (WindowGoTo, ControlTypes.KSC_ALL | ControlTypes.TRACKINGSTATION_UI | ControlTypes.CAMERACONTROLS | ControlTypes.MAP);
 		}
 
@@ -254,16 +277,24 @@ namespace QuickGoTo {
 				DrawButton (RectButton);
 			}
 			if (WindowSettings) {
-				RectSettings = GUILayout.Window (1584654, RectSettings, DrawSettings, Quick.MOD + " " + Quick.VERSION, GUILayout.Width (RectSettings.width), GUILayout.ExpandHeight (true));
+				RectSettings = GUILayout.Window (1584654, RectSettings, DrawSettings, QuickGoTo.MOD + " " + QuickGoTo.VERSION, GUILayout.Width (RectSettings.width), GUILayout.ExpandHeight (true));
 			}
 			if (WindowGoTo) {
 				if (QStockToolbar.Instance.isActive) {
-					if (!QStockToolbar.Instance.isTrue && !QStockToolbar.Instance.isHovering) {
+					if (!QStockToolbar.Instance.isTrue && !QStockToolbar.Instance.isHovering && !keepGoTo) {
 						HideGoTo ();
 						return;
 					}
 				}
 				DrawGoTo (RectGoTo);
+				if (keepGoTo) {
+					if ((DateTime.Now - keepDate).TotalSeconds > 1) {
+						keepGoTo = false;
+					}
+					if (QStockToolbar.Instance.isHovering) {
+						keepDate = DateTime.Now;
+					}
+				}
 			}
 		}
 
@@ -289,35 +320,29 @@ namespace QuickGoTo {
 			GUILayout.Space (5);
 
 			GUILayout.BeginHorizontal ();
+			QSettings.Instance.EnableBatButton = GUILayout.Toggle (QSettings.Instance.EnableBatButton, "Enable button in the batiments", GUILayout.Width (300));
 			bool _bool = GUILayout.Toggle (QSettings.Instance.ImageOnly, "Panel with only the icons", GUILayout.Width (300));
 			if (_bool != QSettings.Instance.ImageOnly) {
 				QSettings.Instance.ImageOnly = _bool;
 				RefreshStyle (true);
 				RefreshTexture ();
 			}
-			if (QSettings.Instance.StockToolBar) {
-				if (!QSettings.Instance.ImageOnly) {
-					QSettings.Instance.CenterText = GUILayout.Toggle (QSettings.Instance.CenterText, "Center the buttons", GUILayout.Width (300));
-				}
-				QSettings.Instance.LockHover = GUILayout.Toggle (QSettings.Instance.LockHover, "Lock buttons on hover", GUILayout.Width (300));
-			}
 			if (QSettings.Instance.StockToolBar && !QSettings.Instance.ImageOnly) {
-				GUILayout.EndHorizontal ();
-				GUILayout.Space (5);
-				GUILayout.BeginHorizontal ();
+				QSettings.Instance.CenterText = GUILayout.Toggle (QSettings.Instance.CenterText, "Center the buttons", GUILayout.Width (300));
 			}
+			GUILayout.EndHorizontal ();
+			GUILayout.Space (5);
 
-			QSettings.Instance.EnableBatButton = GUILayout.Toggle (QSettings.Instance.EnableBatButton, "Enable button in the batiments", GUILayout.Width (300));
-
-			if (QSettings.Instance.StockToolBar && QSettings.Instance.ImageOnly) {
-				GUILayout.EndHorizontal ();
-				GUILayout.Space (5);
-
-				GUILayout.BeginHorizontal ();
+			GUILayout.BeginHorizontal ();
+			if (QSettings.Instance.StockToolBar) {
+				QSettings.Instance.StockToolBar_OnHover = GUILayout.Toggle (QSettings.Instance.StockToolBar_OnHover, "Show QuickGoTo on hovering", GUILayout.Width (300));
+				if (QSettings.Instance.StockToolBar_OnHover) {
+					QSettings.Instance.LockHover = GUILayout.Toggle (QSettings.Instance.LockHover, "Lock buttons on hover", GUILayout.Width (300));
+				} else {
+					GUILayout.Space (300);
+				}
 			}
-
 			GetSkin ();
-	
 			GUILayout.EndHorizontal ();
 			GUILayout.Space (5);
 
@@ -392,7 +417,7 @@ namespace QuickGoTo {
 				_rect += ButtonHeight + GUISpace;
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button (new GUIContent (QGoTo.GetText (QGoTo.GoTo.MainMenu), Main_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-					ToggleGoTo ();
+					HideGoTo (true);
 					QGoTo.mainMenu ();
 				}
 				GUILayout.EndHorizontal ();
@@ -401,7 +426,7 @@ namespace QuickGoTo {
 				_rect += ButtonHeight + GUISpace;				
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Settings), Sett_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-					ToggleGoTo ();
+					HideGoTo (true);
 					QGoTo.settings ();
 				}
 				GUILayout.EndHorizontal ();
@@ -415,7 +440,7 @@ namespace QuickGoTo {
 				}
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.SpaceCenter), SC_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-					ToggleGoTo ();
+					HideGoTo (true);
 					QGoTo.spaceCenter ();
 				}
 				GUILayout.EndHorizontal ();
@@ -430,7 +455,7 @@ namespace QuickGoTo {
 					}
 					GUILayout.BeginHorizontal ();
 					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.VAB), VAB_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-						ToggleGoTo ();
+						HideGoTo (true);
 						QGoTo.VAB ();
 					}
 					GUILayout.EndHorizontal ();
@@ -443,7 +468,7 @@ namespace QuickGoTo {
 					}
 					GUILayout.BeginHorizontal ();
 					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.SPH), SPH_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-						ToggleGoTo ();
+						HideGoTo (true);
 						QGoTo.SPH ();
 					}
 					GUILayout.EndHorizontal ();
@@ -458,60 +483,72 @@ namespace QuickGoTo {
 				}
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.TrackingStation), TS_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-					ToggleGoTo ();
+					HideGoTo (true);
 					QGoTo.trackingStation ();
 				}
 				GUILayout.EndHorizontal ();
 				GUI.enabled = !_lockHover;
 			}
-
-			if (!QGoTo.CanSpaceCenter && HighLogic.LoadedScene != GameScenes.SPACECENTER) {
-				GUI.enabled = false;
-			}
+			bool _CantGoToBat = !QGoTo.CanSpaceCenter && HighLogic.LoadedScene != GameScenes.SPACECENTER;
 			if (QGoTo.CanFundBuilding) {
 				if (QSettings.Instance.EnableGoToMissionControl) {
+					if (_CantGoToBat || QGoTo.isMissionControl) {
+						GUI.enabled = false;
+					}
 					_rect += ButtonHeight + GUISpace;					
 					GUILayout.BeginHorizontal ();
 					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.MissionControl), MI_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-						ToggleGoTo ();
+						HideGoTo (true);
 						QGoTo.missionControl ();
 					}
 					GUILayout.EndHorizontal ();
+					GUI.enabled = !_lockHover;
 				}
 
 				if (QSettings.Instance.EnableGoToAdministration) {
+					if (_CantGoToBat || QGoTo.isAdministration) {
+						GUI.enabled = false;
+					}
 					_rect += ButtonHeight + GUISpace;					
 					GUILayout.BeginHorizontal ();
 					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Administration), Admi_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-						ToggleGoTo ();
+						HideGoTo (true);
 						QGoTo.administration ();
 					}
 					GUILayout.EndHorizontal ();
+					GUI.enabled = !_lockHover;
 				}
 			}
 
 			if (QGoTo.CanScienceBuilding) {
 				if (QSettings.Instance.EnableGoToRnD) {
+					if (_CantGoToBat || QGoTo.isRnD) {
+						GUI.enabled = false;
+					}
 					_rect += ButtonHeight + GUISpace;					
 					GUILayout.BeginHorizontal ();
 					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.RnD), RnD_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-						ToggleGoTo ();
+						HideGoTo (true);
 						QGoTo.RnD ();
 					}
 					GUILayout.EndHorizontal ();
+					GUI.enabled = !_lockHover;
 				}
 			}
 
 			if (QSettings.Instance.EnableGoToAstronautComplex) {
+				if (_CantGoToBat || QGoTo.isAstronautComplex) {
+					GUI.enabled = false;
+				}
 				_rect += ButtonHeight + GUISpace;				
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.AstronautComplex), Astr_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-					ToggleGoTo ();
+				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.AstronautComplex), Astr_Texture), GoToButtonStyle, GUILayout.Width (rectGoTo.width), GUILayout.Height (ButtonHeight))) {
+					HideGoTo (true);
 					QGoTo.astronautComplex ();
 				}
 				GUILayout.EndHorizontal ();
+				GUI.enabled = !_lockHover;
 			}
-			GUI.enabled = !_lockHover;
 		
 			if (QSettings.Instance.EnableGoToLastVessel) {
 				_rect += ButtonHeight + GUISpace;				
@@ -520,7 +557,7 @@ namespace QuickGoTo {
 				}
 				GUILayout.BeginHorizontal ();
 				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.LastVessel), Lves_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-					ToggleGoTo ();
+					HideGoTo (true);
 					QGoTo.LastVessel ();
 				}
 				GUILayout.EndHorizontal ();
@@ -532,7 +569,7 @@ namespace QuickGoTo {
 					_rect += ButtonHeight + GUISpace;					
 					GUILayout.BeginHorizontal ();
 					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Recover), Rc_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-						ToggleGoTo ();
+						HideGoTo (true);
 						QGoTo.Recover ();
 					}
 					GUILayout.EndHorizontal ();
@@ -546,7 +583,7 @@ namespace QuickGoTo {
 						}
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Revert), Rv_Texture), GoToButtonStyle, GUILayout.Width (rectGoTo.width), GUILayout.Height (ButtonHeight))) {
-							ToggleGoTo ();
+							HideGoTo (true);
 							QGoTo.Revert ();
 						}
 						GUILayout.EndHorizontal ();
@@ -562,7 +599,7 @@ namespace QuickGoTo {
 						}
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.RevertToEditor), RvED_Texture), GoToButtonStyle, GUILayout.Width (rectGoTo.width), GUILayout.Height (ButtonHeight))) {
-							ToggleGoTo ();
+							HideGoTo (true);
 							QGoTo.RevertToEditor ();
 						}
 						GUILayout.EndHorizontal ();
@@ -578,7 +615,7 @@ namespace QuickGoTo {
 						}
 						GUILayout.BeginHorizontal ();
 						if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.RevertToSpaceCenter), RvSC_Texture), GoToButtonStyle, GUILayout.Width(rectGoTo.width), GUILayout.Height(ButtonHeight))) {
-							ToggleGoTo ();
+							HideGoTo (true);
 							QGoTo.RevertToSpaceCenter ();
 						}
 						GUILayout.EndHorizontal ();
@@ -594,7 +631,7 @@ namespace QuickGoTo {
 				}
 				GUILayout.EndHorizontal ();
 			}
-				
+
 			GUILayout.EndVertical ();
 			GUILayout.EndArea ();
 			RectGoTo.height = _rect;
@@ -603,7 +640,7 @@ namespace QuickGoTo {
 		private static void DrawButton(Rect rectButton) {
 			GUILayout.BeginArea (rectButton);
 			if (GUILayout.Button (QStockToolbar.GetTexture, GUILayout.Width(40), GUILayout.Height(40))) {
-				QGUI.ToggleGoTo ();
+				HideGoTo (true);
 			}
 			GUILayout.EndArea();
 		}
