@@ -16,15 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
+using KSP.UI.Screens;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace QuickGoTo {
-	public class QGoTo : MonoBehaviour {
+	public class QGoTo : QuickGoTo {
 
-		internal enum GoTo {
+		public enum GoTo {
 			None,
 			TrackingStation,
 			SpaceCenter,
@@ -44,7 +45,7 @@ namespace QuickGoTo {
 			Configurations
 		}	
 
-		internal static string GetText(GoTo goTo, bool force = false) {
+		public static string GetText(GoTo goTo, bool force = false) {
 			switch (goTo) {
 			case GoTo.TrackingStation:
 				return "Go to the Tracking Station";
@@ -253,6 +254,12 @@ namespace QuickGoTo {
 			}
 		}
 
+		public static bool isLaunchScreen {
+			get {
+				return VesselSpawnDialog.Instance != null;
+			}
+		}
+
 		public static bool isAstronautComplex {
 			get;
 			internal set;
@@ -299,7 +306,7 @@ namespace QuickGoTo {
 					}
 				}
 				LastVessels.RemoveAt (index);
-				QuickGoTo.Warning ("Remove a vessel from the last Vessels");
+				Warning ("Remove a vessel from the last Vessels", "QGoTo");
 			}
 			return _lastVessel;
 		}
@@ -363,7 +370,7 @@ namespace QuickGoTo {
 					if (pVesselExists (_lastVessel.protoVessel)) {
 						LastVessels.Add (_lastVessel);
 					} else {
-						QuickGoTo.Warning ("Remove from the last Vessels: " + _lastVessel.protoVessel.vesselName);
+						Warning ("Remove from the last Vessels: " + _lastVessel.protoVessel.vesselName, "QGoTo");
 					}
 				}
 			}
@@ -390,21 +397,21 @@ namespace QuickGoTo {
 			QData _lastVessel = LastVesselLastIndex ();
 			if (_lastVessel!= null) {
 				if (_lastVessel.protoVessel.vesselID == pVessel.vesselID) {
-					QuickGoTo.Warning ("Kept the last Vessel: " + pVessel.vesselName);
+					Log ("Kept the last Vessel: " + pVessel.vesselName, "QGoTo");
 					return;
 				}
 			}
 			if (pVessel.vesselType == VesselType.Unknown || pVessel.vesselType == VesselType.SpaceObject || pVessel.vesselType == VesselType.Debris) {
-				//Quick.Warning (string.Format ("Can't save the last Vessel: ({0}) {1}", pVessel.vesselType.ToString (), pVessel.vesselName));
+				Warning (string.Format ("Can't save the last Vessel: ({0}) {1}", pVessel.vesselType.ToString (), pVessel.vesselName), "QGoTo");
 				return;
 			}
 			LastVessels.Add (new QData (pVessel));
-			QuickGoTo.Warning (string.Format("Saved the last Vessel: ({0}){1}", LastVessels.Count, pVessel.vesselName));
+			Log (string.Format("Saved the last Vessel: ({0}){1}", LastVessels.Count, pVessel.vesselName), "QGoTo");
 			if (LastVessels.Count > 10) {
-				QuickGoTo.Warning ("Delete the first vessel from last Vessel: " + LastVessels[0].protoVessel.vesselName);
+				Log ("Delete the first vessel from last Vessel: " + LastVessels[0].protoVessel.vesselName, "QGoTo");
 				LastVessels.RemoveAt (0);
 			}
-			//Quick.Warning ("Last Vessel has keep " + LastVessels.Count + " vessels");
+			Log ("Last Vessel has keep " + LastVessels.Count + " vessels", "QGoTo");
 		}
 
 		public static void mainMenu() {
@@ -413,10 +420,10 @@ namespace QuickGoTo {
 				GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
 				HighLogic.LoadScene (GameScenes.MAINMENU);
 				InputLockManager.ClearControlLocks ();
-				QuickGoTo.Log (GetText (GoTo.MainMenu));
+				Log (GetText (GoTo.MainMenu));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.MainMenu));
+			Warning ("You can't " + GetText(GoTo.MainMenu), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.MainMenu), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -426,10 +433,10 @@ namespace QuickGoTo {
 				GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
 				HighLogic.LoadScene (GameScenes.SETTINGS);
 				InputLockManager.ClearControlLocks ();
-				QuickGoTo.Log (GetText (GoTo.Settings));
+				Log (GetText (GoTo.Settings));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.Settings));
+			Warning ("You can't " + GetText(GoTo.Settings), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Settings), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -440,10 +447,10 @@ namespace QuickGoTo {
 				HighLogic.LoadScene	(GameScenes.LOADINGBUFFER);
 				HighLogic.LoadScene (GameScenes.TRACKSTATION);
 				InputLockManager.ClearControlLocks ();
-				QuickGoTo.Log (GetText (GoTo.TrackingStation));
+				Log (GetText (GoTo.TrackingStation));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.TrackingStation));
+			Warning ("You can't " + GetText(GoTo.TrackingStation), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.TrackingStation), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -461,40 +468,44 @@ namespace QuickGoTo {
 			SavedGoTo = GoTo.None;
 			if (CanSpaceCenter) {
 				gotoSpaceCenter ();
-				QuickGoTo.Log (GetText (GoTo.SpaceCenter));
+				Log (GetText (GoTo.SpaceCenter));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.SpaceCenter));
+			Warning ("You can't " + GetText(GoTo.SpaceCenter), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.SpaceCenter), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
 		internal static void ClearSpaceCenter() {
-			if (RUIPrefabLauncher.Instance != null) {
+			if (isLaunchScreen) {
 				GameEvents.onGUILaunchScreenDespawn.Fire ();
-				QuickGoTo.Log ("Clear LaunchScreen");
+				Log ("Clear LaunchScreen", "QGoTo");
 			}
 			if (isMissionControl) {
 				GameEvents.onGUIMissionControlDespawn.Fire ();
-				QuickGoTo.Log ("Clear MissionControl");
+				Log ("Clear MissionControl", "QGoTo");
 			}
 			if (isAdministration) {
 				GameEvents.onGUIAdministrationFacilityDespawn.Fire ();
-				QuickGoTo.Log ("Clear Administration");
+				Log ("Clear Administration", "QGoTo");
 			}
 			if (isAstronautComplex) {
 				CMAstronautComplex _CMAstronautComplex = (CMAstronautComplex)CMAstronautComplex.FindObjectOfType (typeof(CMAstronautComplex));
-				POINTER_INFO _ptr = new POINTER_INFO ();
-				_ptr.evt = POINTER_INFO.INPUT_EVENT.TAP;
-				_CMAstronautComplex.ButtonExit (ref _ptr);
+				if (_CMAstronautComplex != null) {
+					POINTER_INFO _ptr = new POINTER_INFO ();
+					_ptr.evt = POINTER_INFO.INPUT_EVENT.TAP;
+					_CMAstronautComplex.ButtonExit (ref _ptr);
+				} else {
+					Warning ("Can't find AstronautComplex", "QGoTo");
+				}
 				GameEvents.onGUIAstronautComplexDespawn.Fire ();
-				QuickGoTo.Log ("Clear AstronautComplex");
+				Log ("Clear AstronautComplex", "QGoTo");
 			}
 			if (isRnD) {
 				GameEvents.onGUIRnDComplexDespawn.Fire ();
-				QuickGoTo.Log ("Clear Research And Development");
+				Log ("Clear Research And Development", "QGoTo");
 			}
 			InputLockManager.ClearControlLocks ();
-			QuickGoTo.Log ("Clear SpaceCenter");
+			Log ("Clear SpaceCenter", "QGoTo");
 		}
 
 		public static void missionControl() {
@@ -505,7 +516,7 @@ namespace QuickGoTo {
 						ClearSpaceCenter ();
 						GameEvents.onGUIMissionControlSpawn.Fire ();
 						InputLockManager.ClearControlLocks ();
-						QuickGoTo.Log (GetText(GoTo.MissionControl));
+						Log (GetText(GoTo.MissionControl));
 						return;
 					}
 					if (CanSpaceCenter) {
@@ -515,7 +526,7 @@ namespace QuickGoTo {
 					}
 				}
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.MissionControl));
+			Warning ("You can't " + GetText(GoTo.MissionControl), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.MissionControl), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -527,7 +538,7 @@ namespace QuickGoTo {
 						ClearSpaceCenter ();
 						GameEvents.onGUIAdministrationFacilitySpawn.Fire ();
 						InputLockManager.ClearControlLocks ();
-						QuickGoTo.Log (GetText(GoTo.Administration));
+						Log (GetText(GoTo.Administration));
 						return;
 					}
 					if (CanSpaceCenter) {
@@ -537,7 +548,7 @@ namespace QuickGoTo {
 					}
 				}
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.Administration));
+			Warning ("You can't " + GetText(GoTo.Administration), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Administration), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -549,7 +560,7 @@ namespace QuickGoTo {
 						ClearSpaceCenter ();
 						GameEvents.onGUIRnDComplexSpawn.Fire ();
 						InputLockManager.ClearControlLocks ();
-						QuickGoTo.Log (GetText(GoTo.RnD));
+						Log (GetText(GoTo.RnD));
 						return;
 					}
 					if (CanSpaceCenter) {
@@ -559,7 +570,7 @@ namespace QuickGoTo {
 					}
 				}
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.RnD));
+			Warning ("You can't " + GetText(GoTo.RnD), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.RnD), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -570,7 +581,7 @@ namespace QuickGoTo {
 					ClearSpaceCenter ();
 					GameEvents.onGUIAstronautComplexSpawn.Fire ();
 					InputLockManager.ClearControlLocks ();
-					QuickGoTo.Log (GetText(GoTo.AstronautComplex));
+					Log (GetText(GoTo.AstronautComplex));
 					return;
 				}
 				if (CanSpaceCenter) {
@@ -579,7 +590,7 @@ namespace QuickGoTo {
 					return;
 				}
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.AstronautComplex));
+			Warning ("You can't " + GetText(GoTo.AstronautComplex), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.AstronautComplex), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -598,10 +609,10 @@ namespace QuickGoTo {
 			SavedGoTo = GoTo.None;
 			if (CanEditor(EditorFacility.VAB)) {
 				gotoVAB ();
-				QuickGoTo.Log (GetText (GoTo.VAB));
+				Log (GetText (GoTo.VAB));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.VAB));
+			Warning ("You can't " + GetText(GoTo.VAB), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.VAB), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -620,10 +631,10 @@ namespace QuickGoTo {
 			SavedGoTo = GoTo.None;
 			if (CanEditor (EditorFacility.SPH)) {
 				gotoSPH ();
-				QuickGoTo.Log (GetText (GoTo.SPH));
+				Log (GetText (GoTo.SPH));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.SPH));
+			Warning ("You can't " + GetText(GoTo.SPH), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.SPH), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -632,10 +643,10 @@ namespace QuickGoTo {
 			if (CanRecover) {
 				GameEvents.OnVesselRecoveryRequested.Fire (FlightGlobals.ActiveVessel);
 				InputLockManager.ClearControlLocks ();
-				QuickGoTo.Log (GetText (GoTo.Recover));
+				Log (GetText (GoTo.Recover));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.Recover));
+			Warning ("You can't " + GetText(GoTo.Recover), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Recover), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -644,10 +655,10 @@ namespace QuickGoTo {
 			if (CanRevert) {
 				FlightDriver.RevertToLaunch ();
 				InputLockManager.ClearControlLocks ();
-				QuickGoTo.Log (GetText (GoTo.Revert));
+				Log (GetText (GoTo.Revert));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText (GoTo.Revert));
+			Warning ("You can't " + GetText (GoTo.Revert), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText (GoTo.Revert), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -656,10 +667,10 @@ namespace QuickGoTo {
 			if (CanRevertToEditor) {
 				FlightDriver.RevertToPrelaunch (ShipConstruction.ShipType);
 				InputLockManager.ClearControlLocks ();
-				QuickGoTo.Log (GetText (GoTo.RevertToEditor));
+				Log (GetText (GoTo.RevertToEditor));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText (GoTo.RevertToEditor));
+			Warning ("You can't " + GetText (GoTo.RevertToEditor), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText (GoTo.RevertToEditor), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -667,10 +678,10 @@ namespace QuickGoTo {
 			SavedGoTo = GoTo.None;
 			if (CanRevertToSpaceCenter) {
 				gotoSpaceCenter (FlightDriver.PreLaunchState);
-				QuickGoTo.Log (GetText (GoTo.RevertToSpaceCenter));
+				Log (GetText (GoTo.RevertToSpaceCenter));
 				return;
 			}
-			QuickGoTo.Warning ("You can't " + GetText (GoTo.RevertToSpaceCenter));
+			Warning ("You can't " + GetText (GoTo.RevertToSpaceCenter), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText (GoTo.RevertToSpaceCenter), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
@@ -683,16 +694,16 @@ namespace QuickGoTo {
 					int _idx = _lastVessel.idx;
 					if (_idx != -1) {
 						string _saveGame = GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-						QuickGoTo.Log (GetText (GoTo.LastVessel));
+						Log (GetText (GoTo.LastVessel));
 						FlightDriver.StartAndFocusVessel (_saveGame, _idx);
 						InputLockManager.ClearControlLocks ();
 						LastVessels.RemoveAt (_index);
-						QuickGoTo.Warning ("Remove from the last Vessels: " + _lastVessel.protoVessel.vesselName);
+						Warning ("Remove from the last Vessels: " + _lastVessel.protoVessel.vesselName, "QGoTo");
 						return;
 					}
 				}
 			}
-			QuickGoTo.Warning ("You can't " + GetText(GoTo.LastVessel));
+			Warning ("You can't " + GetText(GoTo.LastVessel), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.LastVessel), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 	}

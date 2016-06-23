@@ -16,13 +16,77 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
+using KSP.UI;
+using KSP.UI.Screens;
 using System;
 using System.Collections;
 using UnityEngine;
 
 namespace QuickGoTo {
-	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
-	public class QStockToolbar : MonoBehaviour {
+
+	public partial class QStockToolbar {
+
+		private ApplicationLauncher.AppScenes AppScenes = ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION | ApplicationLauncher.AppScenes.VAB;
+		internal ApplicationLauncherButton appLauncherButton;
+
+		internal bool isActive {
+			get {
+				return appLauncherButton != null && isAvailable;
+			}
+		}
+
+		internal bool isHovering {
+			get {
+				if (!QSettings.Instance.StockToolBar_OnHover || appLauncherButton == null || QGUI.Instance == null) {
+					return false;
+				}
+				if (QGUI.Instance.RectGoTo == new Rect ()) {
+					return false;
+				}
+				return appLauncherButton.IsHovering || QGUI.Instance.RectGoTo.Contains (Mouse.screenPos);
+			}
+		}
+
+		internal bool isTrue {
+			get {
+				if (appLauncherButton == null || QGUI.Instance == null) {
+					return false;
+				}
+				if (QGUI.Instance.RectGoTo == new Rect ()) {
+					return false;
+				}
+				return appLauncherButton.toggleButton.CurrentState == KSP.UI.UIRadioButton.State.True;
+			}
+		}
+
+		internal bool isFalse {
+			get {
+				if (appLauncherButton == null || QGUI.Instance == null) {
+					return false;
+				}
+				if (QGUI.Instance.RectGoTo == new Rect ()) {
+					return false;
+				}
+				return appLauncherButton.toggleButton.CurrentState == KSP.UI.UIRadioButton.State.False;
+			}
+		}
+
+		internal Rect Position {
+			get {
+				if (appLauncherButton == null || !isAvailable) {
+					return new Rect ();
+				}
+				Camera _camera = UIMainCamera.Camera;
+				Vector3 _pos = _camera.WorldToScreenPoint (appLauncherButton.GetAnchorUL());
+				return new Rect (_pos.x, Screen.height - _pos.y, 41, 41);
+			}
+		}
+
+
+		public static QStockToolbar Instance {
+			get;
+			private set;
+		}
 
 		internal static bool Enabled {
 			get {
@@ -42,58 +106,13 @@ namespace QuickGoTo {
 			}
 		}
 		
-		private ApplicationLauncher.AppScenes AppScenes = ApplicationLauncher.AppScenes.ALWAYS;
-		private static string TexturePath = QuickGoTo.MOD + "/Textures/StockToolBar";
+		private static string TexturePath = MOD + "/Textures/StockToolBar";
 
-		private void OnTrue () {
-			if (QGUI.WindowSettings) {
-				return;
-			}
-			QGUI.ShowGoTo ();
-		}
-
-		private void OnFalse () {
-			if (QGUI.WindowSettings) {
-				QGUI.Settings ();
-				return;
-			}
-			QGUI.HideGoTo ();
-		}
-
-		private void OnHover () {
-			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.WindowSettings) {
-				return;
-			}
-			QGUI.ShowGoTo ();
-		}
-
-		private void OnHoverOut () {
-			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.WindowSettings || !QGUI.WindowGoTo) {
-				return;
-			}
-			if (QGUI.RectGoTo == new Rect ()) {
-				QGUI.HideGoTo ();
-				return;
-			}
-			if (!isTrue && !isHovering) {
-				QGUI.HideGoTo ();
-			}
-		}
-
-		private void OnEnable () {
-		}
-
-		private void OnDisable () {
-			QGUI.HideGoTo ();
-		}
-			
 		internal static Texture2D GetTexture {
 			get {
 				return GameDatabase.Instance.GetTexture(TexturePath, false);
 			}
 		}
-
-		private ApplicationLauncherButton appLauncherButton;
 
 		internal static bool isAvailable {
 			get {
@@ -105,64 +124,8 @@ namespace QuickGoTo {
 			bool _hidden;
 			return ApplicationLauncher.Instance.Contains (button, out _hidden);
 		}
-
-		internal bool isActive {
-			get {
-				return appLauncherButton != null && isAvailable;
-			}
-		}
-
-		internal bool isHovering {
-			get {
-				if (!QSettings.Instance.StockToolBar_OnHover || appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
-					return false;
-				}
-				return appLauncherButton.toggleButton.IsHovering || QGUI.RectGoTo.Contains (Mouse.screenPos);
-			}
-		}
-
-		internal bool isTrue {
-			get {
-				if (appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
-					return false;
-				}
-				return appLauncherButton.State == RUIToggleButton.ButtonState.TRUE;
-			}
-		}
-
-		internal bool isFalse {
-			get {
-				if (appLauncherButton == null || QGUI.RectGoTo == new Rect()) {
-					return false;
-				}
-				return appLauncherButton.State == RUIToggleButton.ButtonState.FALSE;
-			}
-		}
-
-		internal Rect Position {
-			get {
-				if (appLauncherButton == null || !isAvailable) {
-					return new Rect ();
-				}
-				Camera _camera = UIManager.instance.uiCameras [0].camera;
-				Vector3 _pos = appLauncherButton.GetAnchor ();
-				Rect _rect = new Rect (0, 0, 40, 40);
-				if (ApplicationLauncher.Instance.IsPositionedAtTop) {
-					_rect.x = _camera.WorldToScreenPoint (_pos).x;
-				} else {
-					_rect.x = _camera.WorldToScreenPoint (_pos).x - 40;
-					_rect.y = Screen.height - 40;
-				}
-				return _rect;
-			}
-		}
-
-		internal static QStockToolbar Instance {
-			get;
-			private set;
-		}
-
-		private void Awake() {
+			
+		protected override void Awake() {
 			if (Instance != null) {
 				Destroy (this);
 				return;
@@ -171,15 +134,97 @@ namespace QuickGoTo {
 			DontDestroyOnLoad (Instance);
 			GameEvents.onGUIApplicationLauncherReady.Add (AppLauncherReady);
 			GameEvents.onGUIApplicationLauncherDestroyed.Add (AppLauncherDestroyed);
+			GameEvents.onGUIApplicationLauncherUnreadifying.Add (AppLauncherUnreadifying);
 			GameEvents.onLevelWasLoadedGUIReady.Add (AppLauncherDestroyed);
+			Log ("Awake", "QStockToolbar");
 		}
-			
+
+		protected override void Start() {
+			Log ("Start", "QStockToolbar");
+		}
+
+		protected override void OnDestroy() {
+			GameEvents.onGUIApplicationLauncherReady.Remove (AppLauncherReady);
+			GameEvents.onGUIApplicationLauncherDestroyed.Remove (AppLauncherDestroyed);
+			GameEvents.onGUIApplicationLauncherUnreadifying.Remove (AppLauncherUnreadifying);
+			GameEvents.onLevelWasLoadedGUIReady.Remove (AppLauncherDestroyed);
+			Log ("OnDestroy", "QStockToolbar");
+		}
+
+		private void OnTrue () {
+			if (QGUI.Instance == null) {
+				Warning ("No QGUI Instance", "QStockToolbar");
+				return;
+			}
+			if (QGUI.Instance.WindowSettings) {
+				return;
+			}
+			QGUI.Instance.ShowGoTo ();
+			Log ("OnTrue", "QStockToolbar");
+		}
+
+		private void OnFalse () {
+			if (QGUI.Instance == null) {
+				Warning ("No QGUI Instance", "QStockToolbar");
+				return;
+			}
+			if (QGUI.Instance.WindowSettings) {
+				QGUI.Instance.Settings ();
+				return;
+			}
+			QGUI.Instance.HideGoTo ();
+			Log ("OnFalse", "QStockToolbar");
+		}
+
+		private void OnHover () {
+			if (QGUI.Instance == null) {
+				Warning ("No QGUI Instance", "QStockToolbar");
+				return;
+			}
+			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.Instance.WindowSettings) {
+				return;
+			}
+			QGUI.Instance.ShowGoTo ();
+			Log ("OnHover", "QStockToolbar");
+		}
+
+		private void OnHoverOut () {
+			if (QGUI.Instance == null) {
+				Warning ("No QGUI Instance", "QStockToolbar");
+				return;
+			}
+			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.Instance.WindowSettings || !QGUI.Instance.WindowGoTo) {
+				return;
+			}
+			if (QGUI.Instance.RectGoTo == new Rect ()) {
+				QGUI.Instance.HideGoTo (true);
+				return;
+			}
+			if (!isTrue && !isHovering) {
+				QGUI.Instance.HideGoTo ();
+			}
+			Log ("OnHoverOut", "QStockToolbar");
+		}
+
+		private void OnEnable () {
+			Log ("OnEnable", "QStockToolbar");
+		}
+
+		private void OnDisable () {
+			if (QGUI.Instance == null) {
+				Warning ("No QGUI Instance", "QStockToolbar");
+				return;
+			}
+			QGUI.Instance.HideGoTo ();
+			Log ("OnDisable", "QStockToolbar");
+		}
+
 		private void AppLauncherReady() {
-			QSettings.Instance.Load ();
 			if (!Enabled) {
 				return;
 			}
 			Init ();
+			Log ("AppLauncherReady", "QStockToolbar");
 		}
 
 		private void AppLauncherDestroyed(GameScenes gameScene) {
@@ -191,46 +236,51 @@ namespace QuickGoTo {
 		
 		private void AppLauncherDestroyed() {
 			Destroy ();
+			Log ("AppLauncherDestroyed", "QStockToolbar");
 		}
 
-		private void OnDestroy() {
-			GameEvents.onGUIApplicationLauncherReady.Remove (AppLauncherReady);
-			GameEvents.onGUIApplicationLauncherDestroyed.Remove (AppLauncherDestroyed);
-			GameEvents.onLevelWasLoadedGUIReady.Remove (AppLauncherDestroyed);
+		private void AppLauncherUnreadifying(GameScenes gameScenes) {
+			Set (false, true);
+			Log ("AppLauncherUnreadifying", "QStockToolbar");
 		}
 
 		private void Init() {
 			if (!isAvailable || !CanUseIt) {
 				return;
 			}
+			Destroy ();
 			if (appLauncherButton == null) {
 				if (ModApp) {
-					appLauncherButton = ApplicationLauncher.Instance.AddModApplication (new RUIToggleButton.OnTrue (this.OnTrue), new RUIToggleButton.OnFalse (this.OnFalse), new RUIToggleButton.OnHover (this.OnHover), new RUIToggleButton.OnHoverOut (this.OnHoverOut), new RUIToggleButton.OnEnable (this.OnEnable), new RUIToggleButton.OnDisable (this.OnDisable), AppScenes, GetTexture);
+					appLauncherButton = ApplicationLauncher.Instance.AddModApplication (OnTrue, OnFalse, OnHover, OnHoverOut, OnEnable, OnDisable, AppScenes, GetTexture);
 					ApplicationLauncher.Instance.EnableMutuallyExclusive (appLauncherButton);
 				} else {
-					appLauncherButton = ApplicationLauncher.Instance.AddApplication (new RUIToggleButton.OnTrue (this.OnTrue), new RUIToggleButton.OnFalse (this.OnFalse), new RUIToggleButton.OnHover (this.OnHover), new RUIToggleButton.OnHoverOut (this.OnHoverOut), new RUIToggleButton.OnEnable (this.OnEnable), new RUIToggleButton.OnDisable (this.OnDisable), GetTexture);
-					appLauncherButton.VisibleInScenes = ApplicationLauncher.AppScenes.ALWAYS;
+					appLauncherButton = ApplicationLauncher.Instance.AddApplication (OnTrue, OnFalse, OnHover, OnHoverOut, OnEnable, OnDisable, GetTexture);
+					appLauncherButton.VisibleInScenes = AppScenes;
 				}
 				ApplicationLauncher.Instance.AddOnHideCallback (OnHide);
 			}
+			Log ("Init", "QStockToolbar");
 		}
 
 		private void OnShow() {
-			QGUI.ShowGoTo ();
+			QGUI.Instance.ShowGoTo ();
 			ApplicationLauncher.Instance.RemoveOnShowCallback (OnShow);
+			Log ("OnShow", "QStockToolbar");
 		}
 
 		private void OnHide() {
-			if (!isAvailable) {
+			if (!isAvailable || QGUI.Instance == null) {
 				return;
 			}
-			if (QGUI.WindowSettings || QGUI.WindowGoTo) {
+			if (QGUI.Instance.WindowSettings || QGUI.Instance.WindowGoTo) {
 				ApplicationLauncher.Instance.AddOnShowCallback (OnShow);
 			}
-			if (QGUI.WindowSettings) {
-				QGUI.SettingsSwitch ();
+			if (QGUI.Instance.WindowSettings) {
+				QGUI.Instance.SettingsSwitch ();
+			} else if (QGUI.Instance.WindowGoTo) {
+				QGUI.Instance.HideGoTo (true);
 			}
-			QGUI.HideGoTo ();
+			Log ("OnHide", "QStockToolbar");
 		}
 
 		private void Destroy() {
@@ -238,24 +288,24 @@ namespace QuickGoTo {
 				ApplicationLauncher.Instance.RemoveModApplication (appLauncherButton);
 				ApplicationLauncher.Instance.RemoveApplication (appLauncherButton);
 				appLauncherButton = null;
+				Log ("Destroy", "QStockToolbar");
 			}
 		}
 
 		internal void Set(bool SetTrue, bool force = false) {
-			if (!isAvailable) {
+			if (!isActive) {
 				return;
 			}
-			if (appLauncherButton != null) {
-				if (SetTrue) {
-					if (appLauncherButton.State == RUIToggleButton.ButtonState.FALSE) {
-						appLauncherButton.SetTrue (force);
-					}
-				} else {
-					if (appLauncherButton.State == RUIToggleButton.ButtonState.TRUE) {
-						appLauncherButton.SetFalse (force);
-					}
+			if (SetTrue) {
+				if (isFalse) {
+					appLauncherButton.SetTrue (force);
+				}
+			} else {
+				if (isTrue) {
+					appLauncherButton.SetFalse (force);
 				}
 			}
+			Log ("Set", "QStockToolbar");
 		}
 
 		internal void Reset() {
@@ -268,6 +318,7 @@ namespace QuickGoTo {
 			if (Enabled) {
 				Init ();
 			}
+			Log ("Reset", "QStockToolbar");
 		}
 	}
 }

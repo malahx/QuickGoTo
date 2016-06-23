@@ -17,99 +17,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
-using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace QuickGoTo {
 
 	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
+	public partial class QGUI : QuickGoTo {}
+
+	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+	public partial class QStockToolbar : QuickGoTo {}
+
 	public partial class QuickGoTo : MonoBehaviour {
 
-		internal static QuickGoTo Instance;
-		[KSPField(isPersistant = true)] internal static QBlizzyToolbar BlizzyToolbar;
+		protected readonly static string VERSION = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Major + "." + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Minor + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Build;
+		protected readonly static string MOD = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Name;
 
-		private void Awake() {
-			if (BlizzyToolbar == null) BlizzyToolbar = new QBlizzyToolbar ();
-			GameEvents.onGameSceneLoadRequested.Add (OnGameSceneLoadRequested);
-			GameEvents.onGUIAstronautComplexSpawn.Add (AstronautComplexSpawn);
-			GameEvents.onGUIAstronautComplexDespawn.Add (AstronautComplexDespawn);
-			GameEvents.onGUIRnDComplexSpawn.Add (RnDComplexSpawn);
-			GameEvents.onGUIRnDComplexDespawn.Add (RnDComplexDespawn);
-			GameEvents.onFlightReady.Add (OnFlightReady);
-			QGUI.Awake ();
-		}
-
-		private void Start() {
-			QSettings.Instance.Load ();
-			BlizzyToolbar.Start ();
-			if (HighLogic.LoadedScene == GameScenes.SPACECENTER) {
-				StartCoroutine (QGoTo.PostInit ());
-			}
-			if (HighLogic.LoadedScene == GameScenes.MAINMENU) {
-				QGoTo.LastVessels = new List<QData>();
-			}
-			StartEach ();
-		}
-
-		private void OnFlightReady() {
-			Vessel _vessel = FlightGlobals.ActiveVessel;
-			if (_vessel != null) {
-				ProtoVessel _pVessel = _vessel.protoVessel;
-				if (_pVessel != null) {
-					int _index;
-					QData _QData = QGoTo.LastVesselLastIndex (out _index);
-					if (_QData != null) {
-						ProtoVessel _QDataPVessel = _QData.protoVessel;
-						if (_QDataPVessel != null) {
-							if (_QDataPVessel == _pVessel) {
-								QGoTo.LastVessels.RemoveAt (_index);
-								QuickGoTo.Warning ("Remove the current vessel from the last Vessels: " + _pVessel.vesselName);
-							}
-						}
-					}
+		internal static void Log(string String, string Title = null, bool force = false) {
+			if (!force) {
+				if (!QSettings.Instance.Debug) {
+					return;
 				}
 			}
+			if (Title == null) {
+				Title = MOD;
+			} else {
+				Title = string.Format ("{0}({1})", MOD, Title);
+			}
+			Debug.Log (string.Format ("{0}[{1}]: {2}", Title, VERSION, String));
+		}
+		protected static void Warning(string String, string Title = null) {
+			if (Title == null) {
+				Title = MOD;
+			} else {
+				Title = string.Format ("{0}({1})", MOD, Title);
+			}
+			Debug.LogWarning (string.Format ("{0}[{1}]: {2}", Title, VERSION, String));
 		}
 
-		private void OnGameSceneLoadRequested(GameScenes gameScenes) {
-			if (HighLogic.LoadedSceneIsFlight) {
-				Vessel _vessel = FlightGlobals.ActiveVessel;
-				if (_vessel != null) {
-					QGoTo.AddLastVessel(_vessel.protoVessel);
-				}
-			}
-			QGUI.HideGoTo (true);
-		}
-			
-		private void AstronautComplexSpawn() {
-			QGoTo.isAstronautComplex = true;
-		}
-		private void AstronautComplexDespawn() {
-			QGoTo.isAstronautComplex = false;
-		}
-		private void RnDComplexSpawn() {
-			QGoTo.isRnD = true;
-		}
-		private void RnDComplexDespawn() {
-			QGoTo.isRnD = false;
+		protected virtual void Awake() {
+			Log ("Awake");
 		}
 
-		private void OnDestroy() {
-			StopEach ();
-			BlizzyToolbar.OnDestroy ();
-			GameEvents.onGameSceneLoadRequested.Remove (OnGameSceneLoadRequested);
-			GameEvents.onGUIAstronautComplexSpawn.Remove (AstronautComplexSpawn);
-			GameEvents.onGUIAstronautComplexDespawn.Remove (AstronautComplexDespawn);
-			GameEvents.onGUIRnDComplexSpawn.Remove (RnDComplexSpawn);
-			GameEvents.onGUIRnDComplexDespawn.Remove (RnDComplexDespawn);
-			GameEvents.onFlightReady.Remove (OnFlightReady);
+		protected virtual void Start() {
+			Log ("Start");
 		}
-			
-		private void OnGUI() {
-			if (!HighLogic.LoadedSceneIsGame) {
-				return;
-			}
-			QGUI.OnGUI ();
+
+		protected virtual void OnDestroy() {
+			Log ("OnDestroy");
 		}
 	}
 }

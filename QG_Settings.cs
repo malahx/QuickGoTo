@@ -21,11 +21,22 @@ using System.IO;
 using UnityEngine;
 
 namespace QuickGoTo {
-	public class QSettings : MonoBehaviour {
+	public class QSettings : QuickGoTo {
+		
+		[KSPField(isPersistant = true)]	private static readonly QSettings instance = new QSettings ();
+		public static QSettings Instance {
+			get {
+				if (!instance.isLoaded) {
+					instance.Load ();
+				}
+				return instance;
+			}
+		}
+		internal static string FileConfig = KSPUtil.ApplicationRootPath + "GameData/" + MOD + "/Config.txt";
 
-		public readonly static QSettings Instance = new QSettings();
+		[KSPField(isPersistant = true)]	private bool isLoaded = false;
 
-		internal static string FileConfig = KSPUtil.ApplicationRootPath + "GameData/" + QuickGoTo.MOD + "/Config.txt";
+		[Persistent] public bool Debug = true;
 
 		[Persistent] public bool EnableGoToTrackingStation = true;
 		[Persistent] public bool EnableGoToSpaceCenter = true;
@@ -53,7 +64,7 @@ namespace QuickGoTo {
 		[Persistent] public string CurrentGUISkin = HighLogic.Skin.name;
 		[Persistent] public bool ImageOnly = true;
 		[Persistent] public bool LockHover = false;
-		[Persistent] public bool CenterText = true;
+		[Persistent] public bool CenterText = false;
 
 		[Persistent] public bool EnableQuickExit = false;
 		[Persistent] public bool EnableQuickScroll = false;
@@ -65,7 +76,7 @@ namespace QuickGoTo {
 		public void Save() {
 			ConfigNode _temp = ConfigNode.CreateConfigFromObject(this, new ConfigNode());
 			_temp.Save(FileConfig);
-			QuickGoTo.Log ("Settings Saved");
+			Log ("Settings Saved", "QSettings", true);
 		}
 		public void Load() {
 			if (File.Exists (FileConfig)) {
@@ -75,10 +86,11 @@ namespace QuickGoTo {
 				} catch {
 					Save ();
 				}
-				QuickGoTo.Log ("Settings Loaded");
+				Log ("Settings Loaded", "QSettings", true);
 			} else {
 				Save ();
 			}
+			isLoaded = true;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 ﻿#### QuickGoTo
-#### A plugin for Kerbal Space Program 1.0.X
-#### Copyright 2015 Malah
+#### A plugin for Kerbal Space Program
+#### Copyright 2016 Malah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,21 +23,21 @@ QuickGoTo is a small plugin which add the possibility to go to an other scene fr
 #### How does it work?
 
 You can use the stocktoolbar or the blizzy toolbar mod to go to the:
-- Main: MainMenu,
-- Sett: Settings,
-- SC: SpaceCenter,
-- VAB: Vehicle Assembly Building,
-- SPH: Space Plane Hangar,
-- TS: Tracking Station,
-- MI: Mission Control,
-- Admi: Administration,
-- RnD: Research and Development,
-- Astr: Astronaut Complex,
-- Lves: Last Vessel,
-- Rc: Recover,
-- Rv: Revert to launch,
-- RvED: Revert to Editor,
-- RvSC: Revert to SpaceCenter.
+* Main: MainMenu,
+* Sett: Settings,
+* SC: SpaceCenter,
+* VAB: Vehicle Assembly Building,
+* SPH: Space Plane Hangar,
+* TS: Tracking Station,
+* MI: Mission Control,
+* Admi: Administration,
+* RnD: Research and Development,
+* Astr: Astronaut Complex,
+* Lves: Last Vessel,
+* Rc: Recover,
+* Rv: Revert to launch,
+* RvED: Revert to Editor,
+* RvSC: Revert to SpaceCenter.
 
 #### How to install it?
 
@@ -52,6 +52,11 @@ Unzip all files. Merge the new QuickGoTo folder with the old folder which is in 
 Delete the QuickGoTo folder in your KSP/GameData folder.
 
 #### Changelog
+
+v1.22 - 2016.06.23
+* Fix: Corrected the building button,
+* Fix: Enhanced the settings functions,
+* Compiled against KSP 1.1.3.1289
 
 v1.21 - 2015.11.24
 * New: Added an option to disable the on hover function,
@@ -100,7 +105,7 @@ v0.10 - 2015.03.21
 #### Links
 
 * http://forum.kerbalspaceprogram.com/threads/95168#QuickGoTo
-* https://kerbalstuff.com/mod/653/QuickGoTo
+* http://spacedock.info/mod/102/QuickGoTo
 * http://kerbal.curseforge.com/ksp-mods/230004-quickgoto
 * https://github.com/malahx/QuickGoTo
 * Toolbar: http://forum.kerbalspaceprogram.com/threads/60863

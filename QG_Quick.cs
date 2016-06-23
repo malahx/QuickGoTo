@@ -24,22 +24,38 @@ using UnityEngine;
 
 namespace QuickGoTo {
 
-	public partial class QuickGoTo : MonoBehaviour {
+	public class Quick : MonoBehaviour {
 
-		public readonly static string VERSION = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Major + "." + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Minor + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Build;
-		public readonly static string MOD = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Name;
+		protected readonly static string VERSION = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Major + "." + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Minor + Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Version.Build;
+		protected readonly static string MOD = Assembly.GetAssembly(typeof(QuickGoTo)).GetName().Name;
 
-		private static bool isdebug = true;
-
-		internal static void Log(string _string) {
-			if (isdebug) {
-				Debug.Log (MOD + "(" + VERSION + "): " + _string);
+		protected static void Log(string String, string Title = null) {
+			if (Title == null) {
+				Title = MOD;
+			} else {
+				Title = string.Format ("{0}({1})", MOD, Title);
+			}
+			if (QSettings.Instance.Debug) {
+				Debug.Log (string.Format ("{0}[{1}]: {2}", Title, VERSION, String));
 			}
 		}
-		internal static void Warning(string _string) {
-			if (isdebug) {
-				Debug.LogWarning (MOD + "(" + VERSION + "): " + _string);
+		protected static void Warning(string String, string Title = null) {
+			if (Title == null) {
+				Title = MOD;
+			} else {
+				Title = string.Format ("{0}({1})", MOD, Title);
 			}
+			Debug.LogWarning (string.Format ("{0}[{1}]: {2}", Title, VERSION, String));
+		}
+
+		protected virtual void Awake() {
+			Log ("Awake");
+		}
+		protected virtual void Start() {
+			Log ("Start");
+		}
+		protected virtual void OnDestroy() {
+			Log ("OnDestroy");
 		}
 
 		private Coroutine CoroutineEach;
