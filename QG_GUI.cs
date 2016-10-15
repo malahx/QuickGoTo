@@ -24,9 +24,11 @@ using UnityEngine;
 
 namespace QuickGoTo {
 
-	public partial class QGUI {
+	public partial class QGoTo {
 
-		public static QGUI Instance;
+		public static QGoTo Instance;
+
+		public static bool Ready = false;
 
 		[KSPField(isPersistant = true)] internal static QBlizzyToolbar BlizzyToolbar;
 
@@ -68,15 +70,6 @@ namespace QuickGoTo {
 		private Texture2D Astr_Texture;
 		private Texture2D Admi_Texture;
 		private Texture2D Conf_Texture;
-
-		private string[] GUIWhiteList = {
-			"MainMenuSkin",
-			"KSP window 1",
-			"KSP window 2",
-			"KSP window 3",
-			"KSP window 7",
-			"GameSkin"
-		};
 
 		private bool windowGoTo = false;
 		public bool WindowGoTo {
@@ -158,7 +151,7 @@ namespace QuickGoTo {
 		}
 
 		private Rect rectButton = new Rect (Screen.width - 90, 0, 40, 40);
-		private Rect RectButton {
+		public Rect RectButton {
 			get {
 				rectButton.x = Screen.width - 90;
 				return rectButton;
@@ -184,7 +177,7 @@ namespace QuickGoTo {
 						return false;
 					}
 				}
-				return QGoTo.isAdministration || QGoTo.isAstronautComplex || QGoTo.isMissionControl || QGoTo.isRnD;
+				return isAdministration || isAstronautComplex || isMissionControl || isRnD;
 			}
 		}
 
@@ -220,21 +213,22 @@ namespace QuickGoTo {
 			GameEvents.onGUIRnDComplexSpawn.Add (RnDComplexSpawn);
 			GameEvents.onGUIRnDComplexDespawn.Add (RnDComplexDespawn);
 			GameEvents.onFlightReady.Add (OnFlightReady);
-			RefreshTexture ();
-			RefreshStyle (true);
 			Log ("Awake", "QGUI");
 		}
 
 		protected override void Start() {
 			if (HighLogic.LoadedScene == GameScenes.SPACECENTER) {
-				StartCoroutine (QGoTo.PostInit ());
+				StartCoroutine (PostInit ());
 			}
 			if (HighLogic.LoadedScene == GameScenes.MAINMENU) {
-				QGoTo.LastVessels = new List<QData>();
+				LastVessels = new List<QData>();
 			}
 			if (BlizzyToolbar != null) {
 				BlizzyToolbar.Init ();
 			}
+			RefreshTexture ();
+			RefreshStyle (true);
+			Ready = true;
 			Log ("Start", "QGUI");
 		}
 			
@@ -257,12 +251,12 @@ namespace QuickGoTo {
 				ProtoVessel _pVessel = _vessel.protoVessel;
 				if (_pVessel != null) {
 					int _index;
-					QData _QData = QGoTo.LastVesselLastIndex (out _index);
+					QData _QData = LastVesselLastIndex (out _index);
 					if (_QData != null) {
 						ProtoVessel _QDataPVessel = _QData.protoVessel;
 						if (_QDataPVessel != null) {
 							if (_QDataPVessel == _pVessel) {
-								QGoTo.LastVessels.RemoveAt (_index);
+								LastVessels.RemoveAt (_index);
 								Warning ("Remove the current vessel from the last Vessels: " + _pVessel.vesselName);
 							}
 						}
@@ -276,7 +270,7 @@ namespace QuickGoTo {
 			if (HighLogic.LoadedSceneIsFlight) {
 				Vessel _vessel = FlightGlobals.ActiveVessel;
 				if (_vessel != null) {
-					QGoTo.AddLastVessel(_vessel.protoVessel);
+					AddLastVessel(_vessel.protoVessel);
 				}
 			}
 			HideGoTo (true);
@@ -284,31 +278,31 @@ namespace QuickGoTo {
 		}
 
 		private void AstronautComplexSpawn() {
-			QGoTo.isAstronautComplex = true;
+			isAstronautComplex = true;
 			Log ("AstronautComplexSpawn", "QGUI");
 		}
 
 		private void AstronautComplexDespawn() {
-			QGoTo.isAstronautComplex = false;
+			isAstronautComplex = false;
 			Log ("AstronautComplexDespawn", "QGUI");
 		}
 
 		private void RnDComplexSpawn() {
-			QGoTo.isRnD = true;
+			isRnD = true;
 			Log ("RnDComplexSpawn", "QGUI");
 		}
 
 		private void RnDComplexDespawn() {
-			QGoTo.isRnD = false;
+			isRnD = false;
 			Log ("RnDComplexDespawn", "QGUI");
 		}
 
 		/*private void OnGUILaunchScreenSpawn(GameEvents.VesselSpawnInfo vSpawnInfo) {
-			QGoTo.isLaunchScreen = true;
+			isLaunchScreen = true;
 		}
 
 		private void OnGUILaunchScreenDespawn() {
-			QGoTo.isLaunchScreen = false;
+			isLaunchScreen = false;
 		}*/
 
 		internal void RefreshTexture() {
@@ -333,8 +327,8 @@ namespace QuickGoTo {
 		}
 
 		internal void RefreshStyle(bool force = false) {
-			if (guiSkin == null || force) {
-				guiSkin = AssetBase.GetGUISkin (QSettings.Instance.CurrentGUISkin);
+			if (force) {
+				guiSkin = (QSettings.Instance.KSPSkin ? HighLogic.Skin : null);
 			}
 			if (GoToWindowStyle == null || force) {
 				GoToWindowStyle = new GUIStyle (guiSkin.window);
@@ -385,6 +379,8 @@ namespace QuickGoTo {
 				QStockToolbar.Instance.Reset ();
 				BlizzyToolbar.Reset ();
 				QSettings.Instance.Save ();
+				RefreshStyle (true);
+				RefreshTexture ();
 			}
 			Log ("Settings", "QGUI");
 		}
@@ -429,7 +425,7 @@ namespace QuickGoTo {
 		}
 
 		private void OnGUI() {
-			if (!HighLogic.LoadedSceneIsGame || (isHide && !needButton)) {
+			if (!HighLogic.LoadedSceneIsGame || !Ready || (isHide && !needButton)) {
 				return;
 			}
 			GUI.skin = guiSkin;
@@ -486,8 +482,6 @@ namespace QuickGoTo {
 			bool _bool = GUILayout.Toggle (QSettings.Instance.ImageOnly, "Panel with only the icons", GUILayout.Width (300));
 			if (_bool != QSettings.Instance.ImageOnly) {
 				QSettings.Instance.ImageOnly = _bool;
-				RefreshStyle (true);
-				RefreshTexture ();
 				RectGoTo = new Rect (); 
 			}
 			if (QSettings.Instance.StockToolBar && !QSettings.Instance.ImageOnly) {
@@ -509,7 +503,7 @@ namespace QuickGoTo {
 					GUILayout.Space (300);
 				}
 			}
-			GetSkin ();
+			QSettings.Instance.KSPSkin = GUILayout.Toggle (QSettings.Instance.KSPSkin, "Use the KSP skin", GUILayout.Width (300));
 			GUILayout.EndHorizontal ();
 			GUILayout.Space (5);
 
@@ -519,48 +513,48 @@ namespace QuickGoTo {
 			GUILayout.Space(5);
 
 			GUILayout.BeginHorizontal();
-			QSettings.Instance.EnableGoToMainMenu = GUILayout.Toggle (QSettings.Instance.EnableGoToMainMenu, QGoTo.GetText(QGoTo.GoTo.MainMenu), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToSettings = GUILayout.Toggle (QSettings.Instance.EnableGoToSettings, QGoTo.GetText(QGoTo.GoTo.Settings), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToSpaceCenter = GUILayout.Toggle (QSettings.Instance.EnableGoToSpaceCenter, QGoTo.GetText(QGoTo.GoTo.SpaceCenter), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToMainMenu = GUILayout.Toggle (QSettings.Instance.EnableGoToMainMenu, GetText(GoTo.MainMenu), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToSettings = GUILayout.Toggle (QSettings.Instance.EnableGoToSettings, GetText(GoTo.Settings), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToSpaceCenter = GUILayout.Toggle (QSettings.Instance.EnableGoToSpaceCenter, GetText(GoTo.SpaceCenter), GUILayout.Width (300));
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5);
 
 			GUILayout.BeginHorizontal();
-			QSettings.Instance.EnableGoToVAB = GUILayout.Toggle (QSettings.Instance.EnableGoToVAB, QGoTo.GetText(QGoTo.GoTo.VAB), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToSPH = GUILayout.Toggle (QSettings.Instance.EnableGoToSPH, QGoTo.GetText(QGoTo.GoTo.SPH), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToTrackingStation = GUILayout.Toggle (QSettings.Instance.EnableGoToTrackingStation, QGoTo.GetText(QGoTo.GoTo.TrackingStation), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToVAB = GUILayout.Toggle (QSettings.Instance.EnableGoToVAB, GetText(GoTo.VAB), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToSPH = GUILayout.Toggle (QSettings.Instance.EnableGoToSPH, GetText(GoTo.SPH), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToTrackingStation = GUILayout.Toggle (QSettings.Instance.EnableGoToTrackingStation, GetText(GoTo.TrackingStation), GUILayout.Width (300));
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5);
 
 			GUILayout.BeginHorizontal();
-			QSettings.Instance.EnableGoToMissionControl = GUILayout.Toggle (QSettings.Instance.EnableGoToMissionControl, QGoTo.GetText(QGoTo.GoTo.MissionControl), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToAdministration = GUILayout.Toggle (QSettings.Instance.EnableGoToAdministration, QGoTo.GetText(QGoTo.GoTo.Administration), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToRnD = GUILayout.Toggle (QSettings.Instance.EnableGoToRnD, QGoTo.GetText(QGoTo.GoTo.RnD), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToMissionControl = GUILayout.Toggle (QSettings.Instance.EnableGoToMissionControl, GetText(GoTo.MissionControl), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToAdministration = GUILayout.Toggle (QSettings.Instance.EnableGoToAdministration, GetText(GoTo.Administration), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToRnD = GUILayout.Toggle (QSettings.Instance.EnableGoToRnD, GetText(GoTo.RnD), GUILayout.Width (300));
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5);
 
 
 			GUILayout.BeginHorizontal();
-			QSettings.Instance.EnableGoToAstronautComplex = GUILayout.Toggle (QSettings.Instance.EnableGoToAstronautComplex, QGoTo.GetText(QGoTo.GoTo.AstronautComplex), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToLastVessel = GUILayout.Toggle (QSettings.Instance.EnableGoToLastVessel, QGoTo.GetText (QGoTo.GoTo.LastVessel, true), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToRecover = GUILayout.Toggle (QSettings.Instance.EnableGoToRecover, QGoTo.GetText(QGoTo.GoTo.Recover), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToAstronautComplex = GUILayout.Toggle (QSettings.Instance.EnableGoToAstronautComplex, GetText(GoTo.AstronautComplex), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToLastVessel = GUILayout.Toggle (QSettings.Instance.EnableGoToLastVessel, GetText (GoTo.LastVessel, true), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToRecover = GUILayout.Toggle (QSettings.Instance.EnableGoToRecover, GetText(GoTo.Recover), GUILayout.Width (300));
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5);
 
 			GUILayout.BeginHorizontal();
-			QSettings.Instance.EnableGoToRevert = GUILayout.Toggle (QSettings.Instance.EnableGoToRevert, QGoTo.GetText(QGoTo.GoTo.Revert), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToRevertToEditor = GUILayout.Toggle (QSettings.Instance.EnableGoToRevertToEditor, QGoTo.GetText(QGoTo.GoTo.RevertToEditor), GUILayout.Width (300));
-			QSettings.Instance.EnableGoToRevertToSpaceCenter = GUILayout.Toggle (QSettings.Instance.EnableGoToRevertToSpaceCenter, QGoTo.GetText(QGoTo.GoTo.RevertToSpaceCenter), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToRevert = GUILayout.Toggle (QSettings.Instance.EnableGoToRevert, GetText(GoTo.Revert), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToRevertToEditor = GUILayout.Toggle (QSettings.Instance.EnableGoToRevertToEditor, GetText(GoTo.RevertToEditor), GUILayout.Width (300));
+			QSettings.Instance.EnableGoToRevertToSpaceCenter = GUILayout.Toggle (QSettings.Instance.EnableGoToRevertToSpaceCenter, GetText(GoTo.RevertToSpaceCenter), GUILayout.Width (300));
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5);
 
 			GUILayout.BeginHorizontal();
-			QSettings.Instance.EnableSettings = GUILayout.Toggle (QSettings.Instance.EnableSettings, QGoTo.GetText(QGoTo.GoTo.Configurations) + " (if disabled, it will be displayed only on the Space Center)", GUILayout.Width (900));
+			QSettings.Instance.EnableSettings = GUILayout.Toggle (QSettings.Instance.EnableSettings, GetText(GoTo.Configurations) + " (if disabled, it will be displayed only on the Space Center)", GUILayout.Width (900));
 			GUILayout.EndHorizontal();
 			GUILayout.Space(5);
 
 			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button ("Close", GUILayout.Height(30))) {
+			if (GUILayout.Button ("Close & Save", GUILayout.Height(20))) {
 				Settings ();
 			}
 			GUILayout.EndHorizontal ();
@@ -569,40 +563,40 @@ namespace QuickGoTo {
 		}
 
 		private void DrawGoTo(int id) {
-			bool _lockHover = QSettings.Instance.LockHover && QSettings.Instance.StockToolBar && (QStockToolbar.Instance.isHovering) && !QStockToolbar.Instance.isTrue;
+			bool _lockHover = QSettings.Instance.LockHover && QSettings.Instance.StockToolBar && QStockToolbar.Instance.isHovering && (!QStockToolbar.Instance.isTrue || !isBat);
 			GUILayout.BeginVertical ();
 
 			GUI.enabled = !_lockHover;
 
-			if (!QGoTo.CanMainMenu) {
+			if (!CanMainMenu) {
 				GUI.enabled = false;
 			}
 			if (QSettings.Instance.EnableGoToMainMenu) {
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (QGoTo.GetText (QGoTo.GoTo.MainMenu), Main_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+				if (GUILayout.Button (new GUIContent (GetText (GoTo.MainMenu), Main_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 					HideGoTo (true);
-					QGoTo.mainMenu ();
+					mainMenu ();
 				}
 				GUILayout.EndHorizontal ();
 			}
 			if (QSettings.Instance.EnableGoToSettings) {
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Settings), Sett_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+				if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.Settings), Sett_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 					HideGoTo (true);
-					QGoTo.settings ();
+					settings ();
 				}
 				GUILayout.EndHorizontal ();
 			}
 			GUI.enabled = !_lockHover;
 
 			if (QSettings.Instance.EnableGoToSpaceCenter) {
-				if (!QGoTo.CanSpaceCenter) {
+				if (!CanSpaceCenter) {
 					GUI.enabled = false;
 				}
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.SpaceCenter), SC_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+				if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.SpaceCenter), SC_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 					HideGoTo (true);
-					QGoTo.spaceCenter ();
+					spaceCenter ();
 				}
 				GUILayout.EndHorizontal ();
 				GUI.enabled = !_lockHover;
@@ -610,25 +604,25 @@ namespace QuickGoTo {
 
 			if (HighLogic.CurrentGame.Parameters.Flight.CanLeaveToEditor || !HighLogic.LoadedSceneIsFlight) {
 				if (QSettings.Instance.EnableGoToVAB) {
-					if (!QGoTo.CanEditor (EditorFacility.VAB)) {
+					if (!CanEditor (EditorFacility.VAB)) {
 						GUI.enabled = false;
 					}
 					GUILayout.BeginHorizontal ();
-					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.VAB), VAB_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+					if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.VAB), VAB_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 						HideGoTo (true);
-						QGoTo.VAB ();
+						VAB ();
 					}
 					GUILayout.EndHorizontal ();
 					GUI.enabled = !_lockHover;
 				}
 				if (QSettings.Instance.EnableGoToSPH) {
-					if (!QGoTo.CanEditor (EditorFacility.SPH)) {
+					if (!CanEditor (EditorFacility.SPH)) {
 						GUI.enabled = false;
 					}
 					GUILayout.BeginHorizontal ();
-					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.SPH), SPH_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+					if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.SPH), SPH_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 						HideGoTo (true);
-						QGoTo.SPH ();
+						SPH ();
 					}
 					GUILayout.EndHorizontal ();
 					GUI.enabled = !_lockHover;
@@ -636,55 +630,55 @@ namespace QuickGoTo {
 			}
 
 			if (QSettings.Instance.EnableGoToTrackingStation && (HighLogic.CurrentGame.Parameters.Flight.CanLeaveToTrackingStation || !HighLogic.LoadedSceneIsFlight)) {
-				if (!QGoTo.CanTrackingStation) {
+				if (!CanTrackingStation) {
 					GUI.enabled = false;
 				}
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.TrackingStation), TS_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+				if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.TrackingStation), TS_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 					HideGoTo (true);
-					QGoTo.trackingStation ();
+					trackingStation ();
 				}
 				GUILayout.EndHorizontal ();
 				GUI.enabled = !_lockHover;
 			}
-			bool _CantGoToBat = !QGoTo.CanSpaceCenter && HighLogic.LoadedScene != GameScenes.SPACECENTER;
-			if (QGoTo.CanFundBuilding) {
+			bool _CantGoToBat = !CanSpaceCenter && HighLogic.LoadedScene != GameScenes.SPACECENTER;
+			if (CanFundBuilding) {
 				if (QSettings.Instance.EnableGoToMissionControl) {
-					if (_CantGoToBat || QGoTo.isMissionControl) {
+					if (_CantGoToBat || isMissionControl) {
 						GUI.enabled = false;
 					}
 					GUILayout.BeginHorizontal ();
-					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.MissionControl), MI_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+					if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.MissionControl), MI_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 						HideGoTo (true);
-						QGoTo.missionControl ();
+						missionControl ();
 					}
 					GUILayout.EndHorizontal ();
 					GUI.enabled = !_lockHover;
 				}
 
 				if (QSettings.Instance.EnableGoToAdministration) {
-					if (_CantGoToBat || QGoTo.isAdministration) {
+					if (_CantGoToBat || isAdministration) {
 						GUI.enabled = false;
 					}
 					GUILayout.BeginHorizontal ();
-					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Administration), Admi_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+					if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.Administration), Admi_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 						HideGoTo (true);
-						QGoTo.administration ();
+						administration ();
 					}
 					GUILayout.EndHorizontal ();
 					GUI.enabled = !_lockHover;
 				}
 			}
 
-			if (QGoTo.CanScienceBuilding) {
+			if (CanScienceBuilding) {
 				if (QSettings.Instance.EnableGoToRnD) {
-					if (_CantGoToBat || QGoTo.isRnD) {
+					if (_CantGoToBat || isRnD) {
 						GUI.enabled = false;
 					}
 					GUILayout.BeginHorizontal ();
-					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.RnD), RnD_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+					if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.RnD), RnD_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 						HideGoTo (true);
-						QGoTo.RnD ();
+						RnD ();
 					}
 					GUILayout.EndHorizontal ();
 					GUI.enabled = !_lockHover;
@@ -692,50 +686,50 @@ namespace QuickGoTo {
 			}
 
 			if (QSettings.Instance.EnableGoToAstronautComplex) {
-				if (_CantGoToBat || QGoTo.isAstronautComplex) {
+				if (_CantGoToBat || isAstronautComplex) {
 					GUI.enabled = false;
 				}
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.AstronautComplex), Astr_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+				if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.AstronautComplex), Astr_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 					HideGoTo (true);
-					QGoTo.astronautComplex ();
+					astronautComplex ();
 				}
 				GUILayout.EndHorizontal ();
 				GUI.enabled = !_lockHover;
 			}
 
 			if (QSettings.Instance.EnableGoToLastVessel) {
-				if (!QGoTo.CanLastVessel) {
+				if (!CanLastVessel) {
 					GUI.enabled = false;
 				}
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.LastVessel), Lves_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+				if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.LastVessel), Lves_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 					HideGoTo (true);
-					QGoTo.LastVessel ();
+					LastVessel ();
 				}
 				GUILayout.EndHorizontal ();
 				GUI.enabled = !_lockHover;
 			}
 
 			if (HighLogic.LoadedSceneIsFlight) {
-				if (QSettings.Instance.EnableGoToRecover && QGoTo.CanRecover) {
+				if (QSettings.Instance.EnableGoToRecover && CanRecover) {
 					GUILayout.BeginHorizontal ();
-					if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Recover), Rc_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+					if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.Recover), Rc_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 						HideGoTo (true);
-						QGoTo.Recover ();
+						Recover ();
 					}
 					GUILayout.EndHorizontal ();
 				}
 
 				if (HighLogic.CurrentGame.Parameters.Flight.CanRestart && FlightDriver.CanRevertToPostInit) {
 					if (QSettings.Instance.EnableGoToRevert) {
-						if (!QGoTo.CanRevert) {
+						if (!CanRevert) {
 							GUI.enabled = false;
 						}
 						GUILayout.BeginHorizontal ();
-						if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Revert), Rv_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+						if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.Revert), Rv_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 							HideGoTo (true);
-							QGoTo.Revert ();
+							Revert ();
 						}
 						GUILayout.EndHorizontal ();
 						GUI.enabled = !_lockHover;
@@ -744,13 +738,13 @@ namespace QuickGoTo {
 
 				if (HighLogic.CurrentGame.Parameters.Flight.CanLeaveToEditor && FlightDriver.CanRevertToPrelaunch) {
 					if (QSettings.Instance.EnableGoToRevertToEditor) {
-						if (!QGoTo.CanRevertToEditor) {
+						if (!CanRevertToEditor) {
 							GUI.enabled = false;
 						}
 						GUILayout.BeginHorizontal ();
-						if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.RevertToEditor), RvED_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+						if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.RevertToEditor), RvED_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 							HideGoTo (true);
-							QGoTo.RevertToEditor ();
+							RevertToEditor ();
 						}
 						GUILayout.EndHorizontal ();
 						GUI.enabled = !_lockHover;
@@ -759,13 +753,13 @@ namespace QuickGoTo {
 
 				if (HighLogic.CurrentGame.Parameters.Flight.CanLeaveToSpaceCenter && FlightDriver.CanRevertToPrelaunch) {
 					if (QSettings.Instance.EnableGoToRevertToSpaceCenter) {
-						if (!QGoTo.CanRevertToSpaceCenter) {
+						if (!CanRevertToSpaceCenter) {
 							GUI.enabled = false;
 						}
 						GUILayout.BeginHorizontal ();
-						if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.RevertToSpaceCenter), RvSC_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+						if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.RevertToSpaceCenter), RvSC_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 							HideGoTo (true);
-							QGoTo.RevertToSpaceCenter ();
+							RevertToSpaceCenter ();
 						}
 						GUILayout.EndHorizontal ();
 						GUI.enabled = !_lockHover;
@@ -774,7 +768,7 @@ namespace QuickGoTo {
 			}
 			if (QSettings.Instance.EnableSettings || HighLogic.LoadedScene == GameScenes.SPACECENTER) {
 				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (new GUIContent (" " + QGoTo.GetText (QGoTo.GoTo.Configurations), Conf_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
+				if (GUILayout.Button (new GUIContent (" " + GetText (GoTo.Configurations), Conf_Texture), GoToButtonStyle, GUILayout.Height(GoToButtonHeight))) {
 					Settings ();
 				}
 				GUILayout.EndHorizontal ();
@@ -783,38 +777,12 @@ namespace QuickGoTo {
 			GUILayout.EndVertical ();
 		}
 
-		private void DrawButton(Rect rectButton) {
-			GUILayout.BeginArea (rectButton);
+		private void DrawButton(Rect rectBtn) {
+			GUILayout.BeginArea (rectBtn);
 			if (GUILayout.Button (QStockToolbar.GetTexture, GUILayout.Width(40), GUILayout.Height(40))) {
 				ToggleGoTo ();
 			}
 			GUILayout.EndArea();
-		}
-
-		private void GetSkin() {
-			if (GUILayout.Button ("◄", GUILayout.Width(20), GUILayout.Height(25))) {
-				int _i = Array.FindIndex (GUIWhiteList, item => item == QSettings.Instance.CurrentGUISkin);
-				_i--;
-				if (_i < 0) {
-					_i = GUIWhiteList.Length - 1;
-				}
-				QSettings.Instance.CurrentGUISkin = GUIWhiteList[_i];
-				GUI.skin = AssetBase.GetGUISkin(QSettings.Instance.CurrentGUISkin);
-				RefreshStyle (true);
-				rectSettings.height = 0;
-			}
-			GUILayout.Label ("Skin: " + QSettings.Instance.CurrentGUISkin, LabelStyle, GUILayout.Width (200), GUILayout.Height(30));
-			if (GUILayout.Button ("►", GUILayout.Width (20), GUILayout.Height(25))) {
-				int _i = Array.FindIndex (GUIWhiteList, item => item == QSettings.Instance.CurrentGUISkin);
-				_i++;
-				if (_i >= GUIWhiteList.Length) {
-					_i = 0;
-				}
-				QSettings.Instance.CurrentGUISkin = GUIWhiteList[_i];
-				GUI.skin = AssetBase.GetGUISkin(QSettings.Instance.CurrentGUISkin);
-				RefreshStyle (true);
-				rectSettings.height = 0;
-			}
 		}
 	}
 }

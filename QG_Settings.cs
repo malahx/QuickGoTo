@@ -16,9 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
-using System;
 using System.IO;
-using UnityEngine;
 
 namespace QuickGoTo {
 	public class QSettings : QuickGoTo {
@@ -61,7 +59,7 @@ namespace QuickGoTo {
 		[Persistent] public bool StockToolBar_OnHover = true;
 		[Persistent] public bool EnableBatButton = true;
 
-		[Persistent] public string CurrentGUISkin = HighLogic.Skin.name;
+		[Persistent] public bool KSPSkin = true;
 		[Persistent] public bool ImageOnly = true;
 		[Persistent] public bool LockHover = false;
 		[Persistent] public bool CenterText = false;

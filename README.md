@@ -53,6 +53,16 @@ Delete the QuickGoTo folder in your KSP/GameData folder.
 
 #### Changelog
 
+v1.23 - 2016.10.15
+* Fix: Corrected the crash to desktop with a goto from flight scene,
+* Fix: Corrected the goto from buildings,
+* Fix: Corrected the onhide/onshow of the applauncher,
+* Fix: Init the blizzy toolbar buttons (thanks Fwiffo),
+* Fix: Deleted skin functions (you can chose only KSPSkin or GameSkin),
+* Fix: Deleted foreach functions,
+* Fix: Deleted useless libraries,
+* Compiled against KSP 1.2.0.1586
+
 v1.22 - 2016.06.23
 * Fix: Corrected the building button,
 * Fix: Enhanced the settings functions,

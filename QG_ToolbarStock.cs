@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using KSP.UI;
 using KSP.UI.Screens;
-using System;
-using System.Collections;
 using UnityEngine;
 
 namespace QuickGoTo {
@@ -37,37 +35,37 @@ namespace QuickGoTo {
 
 		internal bool isHovering {
 			get {
-				if (!QSettings.Instance.StockToolBar_OnHover || appLauncherButton == null || QGUI.Instance == null) {
+				if (!QSettings.Instance.StockToolBar_OnHover || appLauncherButton == null || QGoTo.Instance == null) {
 					return false;
 				}
-				if (QGUI.Instance.RectGoTo == new Rect ()) {
+				if (QGoTo.Instance.RectGoTo == new Rect ()) {
 					return false;
 				}
-				return appLauncherButton.IsHovering || QGUI.Instance.RectGoTo.Contains (Mouse.screenPos);
+				return appLauncherButton.IsHovering || QGoTo.Instance.RectGoTo.Contains (Mouse.screenPos) || QGoTo.Instance.RectButton.Contains (Mouse.screenPos);
 			}
 		}
 
 		internal bool isTrue {
 			get {
-				if (appLauncherButton == null || QGUI.Instance == null) {
+				if (appLauncherButton == null || QGoTo.Instance == null) {
 					return false;
 				}
-				if (QGUI.Instance.RectGoTo == new Rect ()) {
+				if (QGoTo.Instance.RectGoTo == new Rect ()) {
 					return false;
 				}
-				return appLauncherButton.toggleButton.CurrentState == KSP.UI.UIRadioButton.State.True;
+				return appLauncherButton.toggleButton.CurrentState == UIRadioButton.State.True;
 			}
 		}
 
 		internal bool isFalse {
 			get {
-				if (appLauncherButton == null || QGUI.Instance == null) {
+				if (appLauncherButton == null || QGoTo.Instance == null) {
 					return false;
 				}
-				if (QGUI.Instance.RectGoTo == new Rect ()) {
+				if (QGoTo.Instance.RectGoTo == new Rect ()) {
 					return false;
 				}
-				return appLauncherButton.toggleButton.CurrentState == KSP.UI.UIRadioButton.State.False;
+				return appLauncherButton.toggleButton.CurrentState == UIRadioButton.State.False;
 			}
 		}
 
@@ -152,56 +150,56 @@ namespace QuickGoTo {
 		}
 
 		private void OnTrue () {
-			if (QGUI.Instance == null) {
-				Warning ("No QGUI Instance", "QStockToolbar");
+			if (QGoTo.Instance == null) {
+				Warning ("No QGoTo Instance", "QStockToolbar");
 				return;
 			}
-			if (QGUI.Instance.WindowSettings) {
+			if (QGoTo.Instance.WindowSettings) {
 				return;
 			}
-			QGUI.Instance.ShowGoTo ();
+			QGoTo.Instance.ShowGoTo ();
 			Log ("OnTrue", "QStockToolbar");
 		}
 
 		private void OnFalse () {
-			if (QGUI.Instance == null) {
-				Warning ("No QGUI Instance", "QStockToolbar");
+			if (QGoTo.Instance == null) {
+				Warning ("No QGoTo Instance", "QStockToolbar");
 				return;
 			}
-			if (QGUI.Instance.WindowSettings) {
-				QGUI.Instance.Settings ();
+			if (QGoTo.Instance.WindowSettings) {
+				QGoTo.Instance.Settings ();
 				return;
 			}
-			QGUI.Instance.HideGoTo ();
+			QGoTo.Instance.HideGoTo ();
 			Log ("OnFalse", "QStockToolbar");
 		}
 
 		private void OnHover () {
-			if (QGUI.Instance == null) {
-				Warning ("No QGUI Instance", "QStockToolbar");
+			if (QGoTo.Instance == null) {
+				Warning ("No QGoTo Instance", "QStockToolbar");
 				return;
 			}
-			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.Instance.WindowSettings) {
+			if (!QSettings.Instance.StockToolBar_OnHover || QGoTo.Instance.WindowSettings) {
 				return;
 			}
-			QGUI.Instance.ShowGoTo ();
+			QGoTo.Instance.ShowGoTo ();
 			Log ("OnHover", "QStockToolbar");
 		}
 
 		private void OnHoverOut () {
-			if (QGUI.Instance == null) {
-				Warning ("No QGUI Instance", "QStockToolbar");
+			if (QGoTo.Instance == null) {
+				Warning ("No QGoTo Instance", "QStockToolbar");
 				return;
 			}
-			if (!QSettings.Instance.StockToolBar_OnHover || QGUI.Instance.WindowSettings || !QGUI.Instance.WindowGoTo) {
+			if (!QSettings.Instance.StockToolBar_OnHover || QGoTo.Instance.WindowSettings || !QGoTo.Instance.WindowGoTo) {
 				return;
 			}
-			if (QGUI.Instance.RectGoTo == new Rect ()) {
-				QGUI.Instance.HideGoTo (true);
+			if (QGoTo.Instance.RectGoTo == new Rect ()) {
+				QGoTo.Instance.HideGoTo (true);
 				return;
 			}
 			if (!isTrue && !isHovering) {
-				QGUI.Instance.HideGoTo ();
+				QGoTo.Instance.HideGoTo ();
 			}
 			Log ("OnHoverOut", "QStockToolbar");
 		}
@@ -211,11 +209,11 @@ namespace QuickGoTo {
 		}
 
 		private void OnDisable () {
-			if (QGUI.Instance == null) {
-				Warning ("No QGUI Instance", "QStockToolbar");
+			if (QGoTo.Instance == null) {
+				Warning ("No QGoTo Instance", "QStockToolbar");
 				return;
 			}
-			QGUI.Instance.HideGoTo ();
+			QGoTo.Instance.HideGoTo ();
 			Log ("OnDisable", "QStockToolbar");
 		}
 
@@ -263,22 +261,22 @@ namespace QuickGoTo {
 		}
 
 		private void OnShow() {
-			QGUI.Instance.ShowGoTo ();
+			QGoTo.Instance.ShowGoTo ();
 			ApplicationLauncher.Instance.RemoveOnShowCallback (OnShow);
 			Log ("OnShow", "QStockToolbar");
 		}
 
 		private void OnHide() {
-			if (!isAvailable || QGUI.Instance == null) {
+			if (!isAvailable || QGoTo.Instance == null) {
 				return;
 			}
-			if (QGUI.Instance.WindowSettings || QGUI.Instance.WindowGoTo) {
+			if (QGoTo.Instance.WindowSettings || QGoTo.Instance.WindowGoTo) {
 				ApplicationLauncher.Instance.AddOnShowCallback (OnShow);
 			}
-			if (QGUI.Instance.WindowSettings) {
-				QGUI.Instance.SettingsSwitch ();
-			} else if (QGUI.Instance.WindowGoTo) {
-				QGUI.Instance.HideGoTo (true);
+			if (QGoTo.Instance.WindowSettings) {
+				QGoTo.Instance.SettingsSwitch ();
+			} else if (QGoTo.Instance.WindowGoTo) {
+				QGoTo.Instance.HideGoTo (true);
 			}
 			Log ("OnHide", "QStockToolbar");
 		}
@@ -287,6 +285,8 @@ namespace QuickGoTo {
 			if (appLauncherButton != null) {
 				ApplicationLauncher.Instance.RemoveModApplication (appLauncherButton);
 				ApplicationLauncher.Instance.RemoveApplication (appLauncherButton);
+				ApplicationLauncher.Instance.RemoveOnHideCallback (OnHide);
+				ApplicationLauncher.Instance.RemoveOnShowCallback (OnShow);
 				appLauncherButton = null;
 				Log ("Destroy", "QStockToolbar");
 			}

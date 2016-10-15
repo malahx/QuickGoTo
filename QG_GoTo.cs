@@ -21,9 +21,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace QuickGoTo {
-	public class QGoTo : QuickGoTo {
+	public partial class QGoTo {
 
 		public enum GoTo {
 			None,
@@ -45,7 +46,7 @@ namespace QuickGoTo {
 			Configurations
 		}	
 
-		public static string GetText(GoTo goTo, bool force = false) {
+		public string GetText(GoTo goTo, bool force = false) {
 			switch (goTo) {
 			case GoTo.TrackingStation:
 				return "Go to the Tracking Station";
@@ -64,7 +65,7 @@ namespace QuickGoTo {
 			case GoTo.SPH:
 				return "Go to the Space Plane Hangar";
 			case GoTo.LastVessel:
-				QData _lastVessel = QGoTo.LastVesselLastIndex ();
+				QData _lastVessel = LastVesselLastIndex ();
 				return string.Format ("Go to the {0}", (_lastVessel != null && !force ? "vessel: " + _lastVessel.protoVessel.vesselName : "last Vessel"));
 			case GoTo.Recover:
 				return "Recover";
@@ -85,11 +86,11 @@ namespace QuickGoTo {
 		}
 
 		[KSPField(isPersistant = true)] internal static List<QData> LastVessels = new List<QData>();
-		[KSPField(isPersistant = true)] private static GoTo SavedGoTo = GoTo.None;
+		[KSPField(isPersistant = true)] static GoTo SavedGoTo = GoTo.None;
 
-		private static string SaveGame = "persistent";
+		string SaveGame = "persistent";
 
-		public static bool CanMainMenu {
+		public bool CanMainMenu {
 			get {
 				if (!HighLogic.LoadedSceneIsFlight) {
 					return true;
@@ -101,7 +102,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanTrackingStation {
+		public bool CanTrackingStation {
 			get {
 				if (HighLogic.LoadedSceneIsGame) {
 					if (HighLogic.LoadedScene != GameScenes.TRACKSTATION) {
@@ -117,7 +118,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanSpaceCenter {
+		public bool CanSpaceCenter {
 			get {
 				if (HighLogic.LoadedSceneIsGame) {
 					if (HighLogic.LoadedScene != GameScenes.SPACECENTER) {
@@ -133,7 +134,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanRecover {
+		public bool CanRecover {
 			get {
 				if (HighLogic.LoadedSceneIsFlight) {
 					if (FlightGlobals.ready && FlightGlobals.ActiveVessel != null) {
@@ -146,7 +147,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanRevert {
+		public bool CanRevert {
 			get {
 				if (HighLogic.LoadedSceneIsFlight) {
 					if (FlightGlobals.ready && HighLogic.CurrentGame.Parameters.Flight.CanRestart && FlightDriver.CanRevertToPostInit && FlightDriver.PostInitState != null) {
@@ -157,7 +158,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanRevertToEditor {
+		public bool CanRevertToEditor {
 			get {
 				if (HighLogic.LoadedSceneIsFlight) {
 					if (FlightGlobals.ready && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToEditor && FlightDriver.CanRevertToPrelaunch && FlightDriver.PreLaunchState != null && ShipConstruction.ShipType != EditorFacility.None) {
@@ -168,7 +169,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanRevertToSpaceCenter {
+		public bool CanRevertToSpaceCenter {
 			get {
 				if (HighLogic.LoadedSceneIsFlight) {
 					if (FlightGlobals.ready && HighLogic.CurrentGame.Parameters.Flight.CanLeaveToSpaceCenter && FlightDriver.CanRevertToPrelaunch && FlightDriver.PreLaunchState != null && ShipConstruction.ShipType != EditorFacility.None) {
@@ -179,7 +180,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanEditor(EditorFacility editorFacility) {
+		public bool CanEditor(EditorFacility editorFacility) {
 			if (HighLogic.LoadedSceneIsGame) {
 				if (HighLogic.LoadedSceneIsEditor) {
 					if (EditorDriver.fetch != null && EditorLogic.fetch != null) {
@@ -199,7 +200,7 @@ namespace QuickGoTo {
 			return false;
 		}
 
-		public static bool CanLastVessel {
+		public bool CanLastVessel {
 			get {
 				if (HighLogic.LoadedSceneIsGame) {
 					QData _lastVessel = LastVesselLastIndex ();
@@ -230,53 +231,53 @@ namespace QuickGoTo {
 			}
 		}
 
-		public static bool CanFundBuilding {
+		public bool CanFundBuilding {
 			get {
 				return HighLogic.CurrentGame.Mode == Game.Modes.CAREER;
 			}
 		}
 
-		public static bool CanScienceBuilding {
+		public bool CanScienceBuilding {
 			get {
 				return HighLogic.CurrentGame.Mode == Game.Modes.CAREER || HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX;
 			}
 		}
 
-		public static bool isMissionControl {
+		public bool isMissionControl {
 			get {
 				return MissionControl.Instance != null;
 			}
 		}
 
-		public static bool isAdministration {
+		public bool isAdministration {
 			get {
 				return Administration.Instance != null;
 			}
 		}
 
-		public static bool isLaunchScreen {
+		public bool isLaunchScreen {
 			get {
 				return VesselSpawnDialog.Instance != null;
 			}
 		}
 
-		public static bool isAstronautComplex {
+		public bool isAstronautComplex {
 			get;
 			internal set;
 		}
 
-		public static bool isRnD {
+		public bool isRnD {
 			get;
 			internal set;
 		}
 
-		public static bool isBat {
+		public bool isBat {
 			get {
 				return isMissionControl || isAdministration || isAstronautComplex || isRnD;
 			}
 		}
 
-		public static bool pVesselExists(ProtoVessel pvessel) {
+		public bool pVesselExists(ProtoVessel pvessel) {
 			FlightState _flightState = HighLogic.CurrentGame.flightState;
 			if (_flightState != null) {
 				return _flightState.protoVessels.Exists (pv => pv.vesselID == pvessel.vesselID);
@@ -284,12 +285,12 @@ namespace QuickGoTo {
 			return false;
 		}
 
-		internal static QData LastVesselLastIndex() {
+		QData LastVesselLastIndex() {
 			int _index;
 			return LastVesselLastIndex(out _index);
 		}
 
-		internal static QData LastVesselLastIndex(out int index) {
+		QData LastVesselLastIndex(out int index) {
 			index = -1;
 			QData _lastVessel = null;
 			while (LastVessels.Count > 0) {
@@ -311,7 +312,23 @@ namespace QuickGoTo {
 			return _lastVessel;
 		}
 
-		internal static IEnumerator PostInit() {
+		IEnumerator loadScene(GameScenes scenes, EditorFacility facility = EditorFacility.None) {
+			yield return new WaitForEndOfFrame ();
+			if (scenes != GameScenes.EDITOR) {
+				HighLogic.LoadScene (scenes);
+			}
+			else if (facility != EditorFacility.None) {
+				EditorFacility editorFacility = EditorFacility.None;
+				if (ShipConstruction.ShipConfig != null) {
+					editorFacility = ShipConstruction.ShipType;
+				}
+				EditorDriver.StartupBehaviour = (editorFacility == facility ? EditorDriver.StartupBehaviours.LOAD_FROM_CACHE : EditorDriver.StartupBehaviours.START_CLEAN);
+				EditorDriver.StartEditor (facility);
+			}
+			InputLockManager.ClearControlLocks ();
+		}
+
+		IEnumerator PostInit() {
 			while (ApplicationLauncher.Instance == null) {
 				yield return 0;
 			}
@@ -349,15 +366,16 @@ namespace QuickGoTo {
 					yield return 0;
 				}
 			}
-			QGoTo.PostInitSC ();
+			PostInitSC ();
 		}
 
-		internal static void PostInitSC() {
+		void PostInitSC() {
 			if (LastVessels.Count < 1) {
 				FlightState _flightState = HighLogic.CurrentGame.flightState;
 				if (_flightState != null) {
 					List<ProtoVessel> _pVessels = _flightState.protoVessels;
-					foreach (ProtoVessel _pVessel in _pVessels) {
+					for (int _i = _pVessels.Count - 1; _i >= 0; --_i) {
+						ProtoVessel _pVessel = _pVessels[_i];
 						if (_pVessel != null) {
 							AddLastVessel (_pVessel);
 						}
@@ -366,7 +384,8 @@ namespace QuickGoTo {
 			} else {
 				List<QData> _lastVessels = LastVessels;
 				LastVessels = new List<QData> ();
-				foreach (QData _lastVessel in _lastVessels) {
+				for (int _i = _lastVessels.Count - 1; _i >= 0; --_i) {
+					QData _lastVessel = _lastVessels[_i];
 					if (pVesselExists (_lastVessel.protoVessel)) {
 						LastVessels.Add (_lastVessel);
 					} else {
@@ -393,7 +412,7 @@ namespace QuickGoTo {
 			}
 		}
 
-		internal static void AddLastVessel(ProtoVessel pVessel) {
+		internal void AddLastVessel(ProtoVessel pVessel) {
 			QData _lastVessel = LastVesselLastIndex ();
 			if (_lastVessel!= null) {
 				if (_lastVessel.protoVessel.vesselID == pVessel.vesselID) {
@@ -414,57 +433,58 @@ namespace QuickGoTo {
 			Log ("Last Vessel has keep " + LastVessels.Count + " vessels", "QGoTo");
 		}
 
-		public static void mainMenu() {
+		public void mainMenu() {
 			SavedGoTo = GoTo.None;
 			if (CanMainMenu) {
+				ClearSpaceCenter ();
 				GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-				HighLogic.LoadScene (GameScenes.MAINMENU);
-				InputLockManager.ClearControlLocks ();
 				Log (GetText (GoTo.MainMenu));
+				StartCoroutine (loadScene (GameScenes.MAINMENU));
 				return;
 			}
 			Warning ("You can't " + GetText(GoTo.MainMenu), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.MainMenu), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void settings() {
+		public void settings() {
 			SavedGoTo = GoTo.None;
 			if (CanMainMenu) {
+				ClearSpaceCenter ();
 				GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-				HighLogic.LoadScene (GameScenes.SETTINGS);
-				InputLockManager.ClearControlLocks ();
 				Log (GetText (GoTo.Settings));
+				StartCoroutine (loadScene (GameScenes.SETTINGS));
 				return;
 			}
 			Warning ("You can't " + GetText(GoTo.Settings), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Settings), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void trackingStation() {
+		public void trackingStation() {
 			SavedGoTo = GoTo.None;
 			if (CanTrackingStation) {
+				ClearSpaceCenter ();
 				GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-				HighLogic.LoadScene	(GameScenes.LOADINGBUFFER);
-				HighLogic.LoadScene (GameScenes.TRACKSTATION);
+				//HighLogic.LoadScene	(GameScenes.LOADINGBUFFER);
 				InputLockManager.ClearControlLocks ();
 				Log (GetText (GoTo.TrackingStation));
+				StartCoroutine (loadScene (GameScenes.TRACKSTATION));
 				return;
 			}
 			Warning ("You can't " + GetText(GoTo.TrackingStation), "QGoTo");
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.TrackingStation), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		private static void gotoSpaceCenter(GameBackup gameBackup = null) {
+		private void gotoSpaceCenter(GameBackup gameBackup = null) {
 			if (gameBackup == null) {
 				GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-			} else {
+			}
+			else {
 				GamePersistence.SaveGame (gameBackup, SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
 			}
-			HighLogic.LoadScene (GameScenes.SPACECENTER);
-			InputLockManager.ClearControlLocks ();
+			StartCoroutine (loadScene(GameScenes.SPACECENTER));
 		}
 
-		public static void spaceCenter() {
+		public void spaceCenter() {
 			SavedGoTo = GoTo.None;
 			if (CanSpaceCenter) {
 				gotoSpaceCenter ();
@@ -475,7 +495,10 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.SpaceCenter), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		internal static void ClearSpaceCenter() {
+		void ClearSpaceCenter() {
+			if (HighLogic.LoadedScene != GameScenes.SPACECENTER) {
+				return;
+			}
 			if (isLaunchScreen) {
 				GameEvents.onGUILaunchScreenDespawn.Fire ();
 				Log ("Clear LaunchScreen", "QGoTo");
@@ -489,14 +512,6 @@ namespace QuickGoTo {
 				Log ("Clear Administration", "QGoTo");
 			}
 			if (isAstronautComplex) {
-				CMAstronautComplex _CMAstronautComplex = (CMAstronautComplex)CMAstronautComplex.FindObjectOfType (typeof(CMAstronautComplex));
-				if (_CMAstronautComplex != null) {
-					POINTER_INFO _ptr = new POINTER_INFO ();
-					_ptr.evt = POINTER_INFO.INPUT_EVENT.TAP;
-					_CMAstronautComplex.ButtonExit (ref _ptr);
-				} else {
-					Warning ("Can't find AstronautComplex", "QGoTo");
-				}
 				GameEvents.onGUIAstronautComplexDespawn.Fire ();
 				Log ("Clear AstronautComplex", "QGoTo");
 			}
@@ -508,7 +523,7 @@ namespace QuickGoTo {
 			Log ("Clear SpaceCenter", "QGoTo");
 		}
 
-		public static void missionControl() {
+		public void missionControl() {
 			SavedGoTo = GoTo.None;
 			if (HighLogic.LoadedSceneIsGame) {
 				if (CanFundBuilding) {
@@ -530,7 +545,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.MissionControl), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void administration() {
+		public void administration() {
 			SavedGoTo = GoTo.None;
 			if (HighLogic.LoadedSceneIsGame) {
 				if (CanFundBuilding) {
@@ -552,7 +567,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Administration), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void RnD() {
+		public void RnD() {
 			SavedGoTo = GoTo.None;
 			if (HighLogic.LoadedSceneIsGame) {
 				if (CanScienceBuilding) {
@@ -574,7 +589,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.RnD), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void astronautComplex() {
+		public void astronautComplex() {
 			SavedGoTo = GoTo.None;
 			if (HighLogic.LoadedSceneIsGame) {
 				if (HighLogic.LoadedScene == GameScenes.SPACECENTER) {
@@ -594,18 +609,13 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.AstronautComplex), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		private static void gotoVAB() {
+		void gotoVAB() {
+			ClearSpaceCenter ();
 			GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-			EditorFacility editorFacility = EditorFacility.None;
-			if (ShipConstruction.ShipConfig != null) {
-				editorFacility = ShipConstruction.ShipType;
-			}
-			EditorDriver.StartupBehaviour = (editorFacility == EditorFacility.VAB ? EditorDriver.StartupBehaviours.LOAD_FROM_CACHE : EditorDriver.StartupBehaviours.START_CLEAN);
-			EditorDriver.StartEditor (EditorFacility.VAB);
-			InputLockManager.ClearControlLocks ();
+			StartCoroutine (loadScene (GameScenes.EDITOR, EditorFacility.VAB));
 		}
 
-		public static void VAB() {
+		public void VAB() {
 			SavedGoTo = GoTo.None;
 			if (CanEditor(EditorFacility.VAB)) {
 				gotoVAB ();
@@ -616,18 +626,13 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.VAB), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		private static void gotoSPH() {
+		void gotoSPH() {
+			ClearSpaceCenter ();
 			GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
-			EditorFacility editorFacility = EditorFacility.None;
-			if (ShipConstruction.ShipConfig != null) {
-				editorFacility = ShipConstruction.ShipType;
-			}
-			EditorDriver.StartupBehaviour = (editorFacility == EditorFacility.SPH ? EditorDriver.StartupBehaviours.LOAD_FROM_CACHE : EditorDriver.StartupBehaviours.START_CLEAN);
-			EditorDriver.StartEditor (EditorFacility.SPH);
-			InputLockManager.ClearControlLocks ();
+			StartCoroutine (loadScene (GameScenes.EDITOR, EditorFacility.SPH));
 		}
 
-		public static void SPH() {
+		public void SPH() {
 			SavedGoTo = GoTo.None;
 			if (CanEditor (EditorFacility.SPH)) {
 				gotoSPH ();
@@ -638,7 +643,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.SPH), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void Recover() {
+		public void Recover() {
 			SavedGoTo = GoTo.None;
 			if (CanRecover) {
 				GameEvents.OnVesselRecoveryRequested.Fire (FlightGlobals.ActiveVessel);
@@ -650,7 +655,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText(GoTo.Recover), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void Revert() {
+		public void Revert() {
 			SavedGoTo = GoTo.None;
 			if (CanRevert) {
 				FlightDriver.RevertToLaunch ();
@@ -662,7 +667,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText (GoTo.Revert), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void RevertToEditor() {
+		public void RevertToEditor() {
 			SavedGoTo = GoTo.None;
 			if (CanRevertToEditor) {
 				FlightDriver.RevertToPrelaunch (ShipConstruction.ShipType);
@@ -674,7 +679,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText (GoTo.RevertToEditor), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void RevertToSpaceCenter() {
+		public void RevertToSpaceCenter() {
 			SavedGoTo = GoTo.None;
 			if (CanRevertToSpaceCenter) {
 				gotoSpaceCenter (FlightDriver.PreLaunchState);
@@ -685,7 +690,7 @@ namespace QuickGoTo {
 			ScreenMessages.PostScreenMessage ("You can't " + GetText (GoTo.RevertToSpaceCenter), 10, ScreenMessageStyle.UPPER_RIGHT);
 		}
 
-		public static void LastVessel() {
+		public void LastVessel() {
 			SavedGoTo = GoTo.None;
 			if (CanLastVessel) {
 				int _index = -1;
@@ -693,6 +698,7 @@ namespace QuickGoTo {
 				if (_lastVessel != null) {
 					int _idx = _lastVessel.idx;
 					if (_idx != -1) {
+						ClearSpaceCenter ();
 						string _saveGame = GamePersistence.SaveGame (SaveGame, HighLogic.SaveFolder, SaveMode.OVERWRITE);
 						Log (GetText (GoTo.LastVessel));
 						FlightDriver.StartAndFocusVessel (_saveGame, _idx);
